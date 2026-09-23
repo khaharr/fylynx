@@ -1,0 +1,109 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String           @id @default(cuid())
+  email                String           @unique
+  passwordHash         String
+  name                 String
+  companyName          String?
+  role                 String           @default("PRO") // PRO, ADMIN
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  subscriptionStatus   String           @default("STARTER") // STARTER, PRO, AI_ENTERPRISE, CANCELED
+  
+  // Personnalisation & Marque Blanche (Seulement Pro Illimité & IA Enterprise)
+  companyLogo          String?
+  customWelcomeMsg     String?
+  brandColor           String?          @default("#4f46e5")
+  
+  // Offre de Lancement : 14 jours d'essai gratuit sur la formule Starter
+  trialEndsAt          DateTime?
+
+  // Tokens de réinitialisation de mot de passe
+  resetToken           String?
+  resetTokenExpires    DateTime?
+
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  folderTemplates      FolderTemplate[]
+  folderRequests       FolderRequest[]
+}
+
+model FolderTemplate {
+  id               String   @id @default(cuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  requiredDocTypes String   // JSON string
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model FolderRequest {
+  id                   String                @id @default(cuid())
+  userId               String
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientName           String
+  clientEmail          String
+  clientPhone          String?
+  token                String                @unique // Token unique pour /d/[token]
+  status               String                @default("PENDING") // PENDING, IN_REVIEW, COMPLETED, EXPIRED
+  expiresAt            DateTime?
+  reminderCount        Int                   @default(0)
+  lastRemindedAt       DateTime?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  documentRequirements DocumentRequirement[]
+
+  @@index([userId])
+  @@index([token])
+  @@index([status])
+}
+
+model DocumentRequirement {
+  id                  String        @id @default(cuid())
+  folderRequestId     String
+  folderRequest       FolderRequest @relation(fields: [folderRequestId], references: [id], onDelete: Cascade)
+  title               String
+  description         String?
+  isRequired          Boolean       @default(true)
+  status              String        @default("WAITING") // WAITING, SUBMITTED, VALIDATED, REJECTED
+  rejectionReason     String?
+  
+  // Champs d'Analyse IA
+  aiVerified          Boolean       @default(false)
+  aiStatus            String?       // PASSED, WARNING, REJECTED
+  aiConfidenceScore   Float?        // 0 à 100
+  aiAnalysisDetails   String?       // JSON String
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  files               DocumentFile[]
+
+  @@index([folderRequestId])
+  @@index([status])
+}
+
+model DocumentFile {
+  id                    String              @id @default(cuid())
+  documentRequirementId String
+  documentRequirement   DocumentRequirement @relation(fields: [documentRequirementId], references: [id], onDelete: Cascade)
+  fileKey               String
+  fileName              String
+  fileSize              Int
+  mimeType              String
+  uploadedAt            DateTime            @default(now())
+
+  @@index([documentRequirementId])
+}
