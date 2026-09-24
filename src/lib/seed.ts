@@ -2,7 +2,7 @@ import { db } from './db';
 import bcrypt from 'bcryptjs';
 
 export async function seedDatabase() {
-  const existingUser = await db.user.findFirst({ where: { email: 'demo@fylynx.app' } });
+  const existingUser = await db.user.findFirst({ where: { email: 'demo@fylinx.com' } });
   if (existingUser) {
     return existingUser;
   }
@@ -11,7 +11,7 @@ export async function seedDatabase() {
 
   const demoUser = await db.user.create({
     data: {
-      email: 'demo@fylynx.app',
+      email: 'demo@fylinx.com',
       name: 'Jean Dupont',
       companyName: 'Agence Immobilière Dupont & Co',
       passwordHash,

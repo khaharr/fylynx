@@ -422,45 +422,261 @@ export default function PublicDepositorView({ initialFolder }: { initialFolder: 
                   </div>
                 )}
 
-                {/* Upload Action Buttons */}
-                <div className="mt-4 flex flex-col sm:flex-row items-center gap-2">
-                  <input
-                    type="file"
-                    ref={(el) => {
-                      fileInputRefs.current[req.id] = el;
-                    }}
-                    accept="image/*,application/pdf"
-                    capture="environment"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileSelect(req.id, file);
-                    }}
-                  />
+                {/* Upload Action Cards & Recto/Verso Layout */}
+                {req.title.toLowerCase().includes('recto') || req.title.toLowerCase().includes('verso') ? (
+                  <div className="mt-4 space-y-3">
+                    {/* Status Badge header for Recto/Verso */}
+                    {(() => {
+                      const rectoFile = req.files.find((f) => f.fileName.toUpperCase().startsWith('RECTO_'));
+                      const versoFile = req.files.find((f) => f.fileName.toUpperCase().startsWith('VERSO_'));
+                      const hasRecto = Boolean(rectoFile);
+                      const hasVerso = Boolean(versoFile);
 
-                  <button
-                    type="button"
-                    disabled={isProcessing}
-                    onClick={() => fileInputRefs.current[req.id]?.click()}
-                    className={`w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm transition-all shadow-md ${
-                      isDone
-                        ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
-                        : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-600/30 active:scale-98'
-                    }`}
-                  >
-                    {isProcessing ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin text-white" />
-                        {hasAiEnterprise ? 'Analyse IA et transfert en cours...' : 'Transfert et chiffrement du fichier en cours...'}
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="h-4 w-4" />
-                        {isDone ? 'Remplacer la photo / fichier' : 'Prendre en photo / Importer'}
-                      </>
+                      if (hasRecto && hasVerso) {
+                        return (
+                          <div className="p-2.5 bg-emerald-950/60 border border-emerald-500/40 rounded-xl text-emerald-300 text-xs font-bold flex items-center gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                            <span>✓ 2/2 faces reçues — Document Recto + Verso complet !</span>
+                          </div>
+                        );
+                      }
+                      if (hasRecto || hasVerso) {
+                        return (
+                          <div className="p-2.5 bg-amber-950/60 border border-amber-500/40 rounded-xl text-amber-300 text-xs font-bold flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-amber-400 shrink-0" />
+                            <span>
+                              1/2 face reçue — {hasRecto ? 'Face VERSO (Arrière) manquante' : 'Face RECTO (Avant) manquante'}
+                            </span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="text-[11px] font-extrabold uppercase text-amber-400 flex items-center gap-1.5">
+                          <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                          Document Recto + Verso exigé : Transmettez les 2 faces
+                        </div>
+                      );
+                    })()}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* RECTO CARD */}
+                      {(() => {
+                        const rectoFile = req.files.find((f) => f.fileName.toUpperCase().startsWith('RECTO_'));
+                        const hasRecto = Boolean(rectoFile);
+
+                        return (
+                          <div
+                            className={`p-3.5 rounded-2xl border transition-all ${
+                              hasRecto
+                                ? 'bg-emerald-950/40 border-emerald-500/50'
+                                : 'bg-slate-900/90 border-slate-700/80 hover:border-slate-600'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
+                                <Camera className="h-3.5 w-3.5 text-brand-400" /> Face RECTO (Avant)
+                              </span>
+                              {hasRecto && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                  ✓ Transmis
+                                </span>
+                              )}
+                            </div>
+
+                            {hasRecto && rectoFile ? (
+                              <div className="space-y-2 mb-3">
+                                <div className="p-2 bg-slate-950 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-300 truncate flex items-center gap-2">
+                                  <FileText className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                                  <span className="truncate">{rectoFile.fileName}</span>
+                                </div>
+                                <div className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" /> Face RECTO déposée avec succès
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">
+                                Prenez en photo ou importez la face avant lisible de la pièce.
+                              </p>
+                            )}
+
+                            <input
+                              type="file"
+                              ref={(el) => {
+                                fileInputRefs.current[req.id + '_recto'] = el;
+                              }}
+                              accept="image/*,application/pdf"
+                              capture="environment"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const renamedFile = new File([file], `RECTO_${file.name}`, { type: file.type });
+                                  handleFileSelect(req.id, renamedFile);
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              disabled={isProcessing}
+                              onClick={() => fileInputRefs.current[req.id + '_recto']?.click()}
+                              className={`w-full py-2 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition shadow ${
+                                hasRecto
+                                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                                  : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-600/30'
+                              }`}
+                            >
+                              {isProcessing ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Camera className="h-3.5 w-3.5 text-emerald-300" />
+                              )}
+                              {hasRecto ? 'Remplacer le Recto' : '1. Déposer Face RECTO'}
+                            </button>
+                          </div>
+                        );
+                      })()}
+
+                      {/* VERSO CARD */}
+                      {(() => {
+                        const versoFile = req.files.find((f) => f.fileName.toUpperCase().startsWith('VERSO_'));
+                        const hasVerso = Boolean(versoFile);
+
+                        return (
+                          <div
+                            className={`p-3.5 rounded-2xl border transition-all ${
+                              hasVerso
+                                ? 'bg-emerald-950/40 border-emerald-500/50'
+                                : 'bg-slate-900/90 border-slate-700/80 hover:border-slate-600'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-extrabold text-slate-200 flex items-center gap-1.5">
+                                <Camera className="h-3.5 w-3.5 text-indigo-400" /> Face VERSO (Arrière)
+                              </span>
+                              {hasVerso && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                                  ✓ Transmis
+                                </span>
+                              )}
+                            </div>
+
+                            {hasVerso && versoFile ? (
+                              <div className="space-y-2 mb-3">
+                                <div className="p-2 bg-slate-950 rounded-xl border border-slate-800 text-[11px] font-mono text-slate-300 truncate flex items-center gap-2">
+                                  <FileText className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                                  <span className="truncate">{versoFile.fileName}</span>
+                                </div>
+                                <div className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" /> Face VERSO déposée avec succès
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-[11px] text-slate-400 mb-3 leading-relaxed">
+                                Prenez en photo ou importez le dos/arriere lisible de la pièce.
+                              </p>
+                            )}
+
+                            <input
+                              type="file"
+                              ref={(el) => {
+                                fileInputRefs.current[req.id + '_verso'] = el;
+                              }}
+                              accept="image/*,application/pdf"
+                              capture="environment"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  const renamedFile = new File([file], `VERSO_${file.name}`, { type: file.type });
+                                  handleFileSelect(req.id, renamedFile);
+                                }
+                              }}
+                            />
+                            <button
+                              type="button"
+                              disabled={isProcessing}
+                              onClick={() => fileInputRefs.current[req.id + '_verso']?.click()}
+                              className={`w-full py-2 px-3 rounded-xl font-extrabold text-xs flex items-center justify-center gap-1.5 transition shadow ${
+                                hasVerso
+                                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                                  : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/30'
+                              }`}
+                            >
+                              {isProcessing ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Camera className="h-3.5 w-3.5 text-indigo-200" />
+                              )}
+                              {hasVerso ? 'Remplacer le Verso' : '2. Déposer Face VERSO'}
+                            </button>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-4 space-y-3">
+                    {/* Display deposited files list if files exist */}
+                    {req.files.length > 0 && (
+                      <div className="p-3 bg-emerald-950/30 border border-emerald-500/40 rounded-xl space-y-2">
+                        <div className="text-[11px] font-extrabold text-emerald-400 flex items-center gap-1.5">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                          Document transmis et sauvegardé avec succès
+                        </div>
+                        {req.files.map((f) => (
+                          <div
+                            key={f.id}
+                            className="p-2 bg-slate-900 rounded-lg border border-slate-700 text-xs font-mono text-slate-200 flex items-center justify-between"
+                          >
+                            <span className="truncate">{f.fileName}</span>
+                            <span className="text-[10px] text-slate-400 font-sans ml-2">
+                              ({(f.fileSize / 1024 / 1024).toFixed(2)} Mo)
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     )}
-                  </button>
-                </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-2">
+                      <input
+                        type="file"
+                        ref={(el) => {
+                          fileInputRefs.current[req.id] = el;
+                        }}
+                        accept="image/*,application/pdf"
+                        capture="environment"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileSelect(req.id, file);
+                        }}
+                      />
+
+                      <button
+                        type="button"
+                        disabled={isProcessing}
+                        onClick={() => fileInputRefs.current[req.id]?.click()}
+                        className={`w-full flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm transition-all shadow-md ${
+                          isDone
+                            ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                            : 'bg-brand-600 hover:bg-brand-500 text-white shadow-brand-600/30 active:scale-98'
+                        }`}
+                      >
+                        {isProcessing ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin text-white" />
+                            {hasAiEnterprise ? 'Analyse IA et transfert en cours...' : 'Transfert et chiffrement du fichier en cours...'}
+                          </>
+                        ) : (
+                          <>
+                            <Camera className="h-4 w-4" />
+                            {isDone ? 'Remplacer la photo / fichier' : 'Prendre en photo / Importer le document'}
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { db } from './db';
@@ -34,9 +35,9 @@ export function parseSessionToken(token: string): { userId: string } | null {
   return null;
 }
 
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async () => {
   const cookieStore = cookies();
-  const sessionToken = cookieStore.get('fylynx_session')?.value || cookieStore.get('fylynx_session')?.value;
+  const sessionToken = cookieStore.get(COOKIE_NAME)?.value;
 
   if (!sessionToken) return null;
 
@@ -59,7 +60,7 @@ export async function getCurrentUser() {
   });
 
   return user;
-}
+});
 
 export function setSessionCookie(token: string) {
   const cookieStore = cookies();

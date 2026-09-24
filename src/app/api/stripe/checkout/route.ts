@@ -6,10 +6,17 @@ import { db } from '@/lib/db';
 
 export async function POST(req: Request) {
   try {
-    const { plan } = await req.json(); // 'STARTER' or 'PRO'
-    const targetPlan = plan === 'PRO' ? PLANS.PRO : PLANS.STARTER;
+    const { plan, billingPeriod = 'monthly' } = await req.json(); // 'STARTER', 'PRO', 'AGENCY_SCALE', or 'AI_ENTERPRISE'
+    
+    let targetPlan = PLANS.STARTER;
+    if (plan === 'PRO') targetPlan = PLANS.PRO;
+    if (plan === 'AGENCY_SCALE') targetPlan = PLANS.AGENCY_SCALE;
+    if (plan === 'AI_ENTERPRISE') targetPlan = PLANS.AI_ENTERPRISE;
 
-    const user = await db.user.findFirst({ where: { email: 'demo@fylynx.app' } });
+    const isAnnual = billingPeriod === 'annual';
+    const priceId = isAnnual ? targetPlan.priceIdAnnual : targetPlan.priceIdMonthly;
+
+    const user = await db.user.findFirst({ where: { email: 'demo@fylinx.com' } });
     if (!user) {
       return NextResponse.json({ error: 'Utilisateur non identifié' }, { status: 401 });
     }
@@ -23,7 +30,7 @@ export async function POST(req: Request) {
         customer_email: user.email,
         line_items: [
           {
-            price: targetPlan.priceId,
+            price: priceId,
             quantity: 1,
           },
         ],
@@ -33,6 +40,7 @@ export async function POST(req: Request) {
         metadata: {
           userId: user.id,
           plan: plan || 'STARTER',
+          billingPeriod: isAnnual ? 'annual' : 'monthly',
         },
       });
 
@@ -46,7 +54,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({
-      url: `${appUrl}/dashboard/settings?mock_success=true&plan=${plan}`,
+      url: `${appUrl}/dashboard/settings?mock_success=true&plan=${plan}&period=${billingPeriod}`,
     });
   } catch (err) {
     console.error('[Stripe Checkout Error]', err);

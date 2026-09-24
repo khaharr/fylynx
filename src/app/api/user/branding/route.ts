@@ -17,9 +17,10 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: 'Utilisateur introuvable' }, { status: 404 });
     }
 
-    // Only PRO, AI_ENTERPRISE, or ADMIN can use custom white-label branding
+    // Only PRO, AGENCY_SCALE, AI_ENTERPRISE, or ADMIN can use custom white-label branding
     const canUseBranding =
       dbUser.subscriptionStatus === 'PRO' ||
+      dbUser.subscriptionStatus === 'AGENCY_SCALE' ||
       dbUser.subscriptionStatus === 'AI_ENTERPRISE' ||
       dbUser.role === 'ADMIN';
 

@@ -31,9 +31,18 @@ import {
   Menu,
   X,
   Calculator,
+  Briefcase,
+  Scale,
+  UserCheck,
+  Landmark,
+  Truck,
+  FileCheck,
 } from 'lucide-react';
 import FylynxLogo from '@/components/FylynxLogo';
+import PricingComparisonTable from '@/components/PricingComparisonTable';
+import RoiCalculator from '@/components/RoiCalculator';
 import { PLANS } from '@/lib/stripe';
+import { BLOG_ARTICLES } from '@/lib/blog-data';
 
 const SAMPLE_DOCS = [
   {
@@ -104,10 +113,12 @@ const BRANDS = [
   'CABINET MARTIN',
   'BRED BANQUE',
   'INEXTENSO',
-  'ORPÉA',
+  'ELEOM-AVOCATS',
+  'K&C CARS'
 ];
 
 export default function LandingPage() {
+  const [isAnnual, setIsAnnual] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedDocIndex, setSelectedDocIndex] = useState(0);
@@ -143,8 +154,8 @@ export default function LandingPage() {
       {
         '@type': 'Organization',
         'name': 'Fylynx',
-        'url': 'https://fylynx.app',
-        'logo': 'https://fylynx.app/favicon.ico',
+        'url': 'https://fylynx.com',
+        'logo': 'https://fylynx.com/fylynx-logo.png',
         'sameAs': [],
       },
       {
@@ -365,20 +376,35 @@ export default function LandingPage() {
           </p>
         </div>
 
-        {/* Continuous Marquee Wrapper */}
-        <div className="flex overflow-hidden select-none">
-          <div className="animate-marquee gap-6 items-center">
-            {[...BRANDS, ...BRANDS, ...BRANDS].map((brand, i) => (
+        {/* Continuous Marquee Wrapper (Guaranteed Single Line) */}
+        <div className="flex flex-row flex-nowrap overflow-hidden select-none py-2 gap-6 w-full">
+          <div className="animate-marquee flex flex-row flex-nowrap shrink-0 items-center gap-6">
+            {[...BRANDS, ...BRANDS].map((brand, i) => (
               <div
-                key={i}
-                className="px-5 py-3 bg-slate-900/70 border border-slate-800 hover:border-slate-700 rounded-2xl font-extrabold text-xs text-slate-300 tracking-wider whitespace-nowrap shadow-sm hover:text-white hover:scale-105 transition duration-300"
+                key={`b1-${i}`}
+                className="px-5 py-3 bg-slate-900/80 border border-slate-800 hover:border-brand-500/50 rounded-2xl font-extrabold text-xs text-slate-300 tracking-wider whitespace-nowrap shadow-sm hover:text-white transition-colors duration-300 flex items-center gap-2 shrink-0"
               >
+                <span className="h-2 w-2 rounded-full bg-brand-400 animate-pulse" />
+                {brand}
+              </div>
+            ))}
+          </div>
+          <div className="animate-marquee flex flex-row flex-nowrap shrink-0 items-center gap-6" aria-hidden="true">
+            {[...BRANDS, ...BRANDS].map((brand, i) => (
+              <div
+                key={`b2-${i}`}
+                className="px-5 py-3 bg-slate-900/80 border border-slate-800 hover:border-brand-500/50 rounded-2xl font-extrabold text-xs text-slate-300 tracking-wider whitespace-nowrap shadow-sm hover:text-white transition-colors duration-300 flex items-center gap-2 shrink-0"
+              >
+                <span className="h-2 w-2 rounded-full bg-brand-400 animate-pulse" />
                 {brand}
               </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* INTERACTIVE ROI & SAVINGS CALCULATOR */}
+      <RoiCalculator />
 
       {/* Interactive AI Verification Demo Section */}
       <section id="demo-ia" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -714,9 +740,147 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* 5-STEP WORKFLOW SECTION (INSPIRED BY SUPERDOCU) */}
+      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-900">
+        <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 text-xs font-bold">
+            <Sparkles className="h-4 w-4 text-amber-400" />
+            <span>Processus Simplicité & Automatisation</span>
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+            Un fonctionnement simple en 5 étapes.
+          </h2>
+          <p className="text-slate-400 text-base">
+            Dites adieu aux e-mails sans fin et aux fichiers perdus. Automatisez une fois, gardez vos dossiers à jour pour toujours.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="p-6 rounded-3xl bg-slate-900/70 border border-slate-800 hover:border-brand-500/50 transition space-y-3">
+            <div className="text-3xl font-black text-brand-400 font-mono">01</div>
+            <h3 className="text-sm font-extrabold text-white">Créez votre séquence</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Construisez des demandes de pièces personnalisées avec nos modèles simples et adaptés à votre métier.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-slate-900/70 border border-slate-800 hover:border-brand-500/50 transition space-y-3">
+            <div className="text-3xl font-black text-brand-400 font-mono">02</div>
+            <h3 className="text-sm font-extrabold text-white">Invitez vos contacts</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Envoyez des liens de demande personnalisés par e-mail ou SMS, aux couleurs de votre entreprise.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-slate-900/70 border border-slate-800 hover:border-brand-500/50 transition space-y-3">
+            <div className="text-3xl font-black text-brand-400 font-mono">03</div>
+            <h3 className="text-sm font-extrabold text-white">Dépôt par le client</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Interface smartphone intuitive : vos clients prennent en photo et envoient facilement leurs justificatifs.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-slate-900/70 border border-slate-800 hover:border-brand-500/50 transition space-y-3">
+            <div className="text-3xl font-black text-brand-400 font-mono">04</div>
+            <h3 className="text-sm font-extrabold text-white">Automatisez les relances</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              S&apos;il manque quelque chose, nos relances automatiques par e-mail et SMS prennent le relais.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-slate-900/70 border border-slate-800 hover:border-emerald-500/50 transition space-y-3 bg-gradient-to-b from-emerald-950/20 to-slate-900/70">
+            <div className="text-3xl font-black text-emerald-400 font-mono">05</div>
+            <h3 className="text-sm font-extrabold text-white">Validez par IA & suivez</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Validez chaque pièce avec le contrôle IA temps réel et téléchargez votre dossier ZIP complet.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTORS OF ACTIVITY GRID */}
+      <section className="py-24 bg-slate-950 border-t border-slate-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 text-xs font-bold">
+              <Building2 className="h-4 w-4 text-brand-400" />
+              <span>Adapté à Tous les Secteurs</span>
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+              Pour tous les secteurs d&apos;activité.
+            </h2>
+            <p className="text-slate-400 text-base">
+              Fylynx s&apos;adapte à vos exigences métier. Utilisez nos modèles ou créez vos propres processus de collecte.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-brand-500/50 transition space-y-3">
+              <div className="h-10 w-10 rounded-2xl bg-brand-500/10 text-brand-400 border border-brand-500/20 flex items-center justify-center">
+                <Building2 className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-extrabold text-white">Immobilier & Gestion Locative</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Simplifiez les dossiers de location, mandats de vente, pièces de garants et gestion documentaire.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-brand-500/50 transition space-y-3">
+              <div className="h-10 w-10 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center">
+                <Scale className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-extrabold text-white">Juridique & Avocats</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Gérez les pièces clients, mandats et documents sensibles en toute conformité RGPD et chiffrement militaire.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-brand-500/50 transition space-y-3">
+              <div className="h-10 w-10 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
+                <UserCheck className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-extrabold text-white">RH & Recrutement</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Centralisez CV, diplômes, cartes d&apos;identité et pièces d&apos;onboarding sans relancer manuellement.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-brand-500/50 transition space-y-3">
+              <div className="h-10 w-10 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
+                <Landmark className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-extrabold text-white">Courtiers & Banques</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Récupérez tous les documents nécessaires à la demande de prêt (avis d&apos;imposition, fiches de paie).
+              </p>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-brand-500/50 transition space-y-3">
+              <div className="h-10 w-10 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center justify-center">
+                <Briefcase className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-extrabold text-white">Comptabilité & Finance</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Collectez automatiquement les factures manquantes, relevés et pièces comptables de fin d&apos;exercice.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-brand-500/50 transition space-y-3">
+              <div className="h-10 w-10 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center">
+                <Truck className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-extrabold text-white">Transport & BTP</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Gagnez du temps sur la collecte des permis de conduire, cartes grises, attestations de sécurité et Kbis.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section id="tarifs" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
+        <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">
           <span className="text-xs font-extrabold uppercase tracking-widest text-brand-400">
             Tarifs Transparents & Sans Engagement
           </span>
@@ -728,9 +892,38 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+        {/* Monthly / Annual Billing Toggle Button */}
+        <div className="flex items-center justify-center gap-4 mb-16">
+          <span className={`text-xs font-bold transition ${!isAnnual ? 'text-white font-extrabold scale-105' : 'text-slate-400'}`}>
+            Facturation Mensuelle
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setIsAnnual(!isAnnual)}
+            className="relative w-16 h-9 rounded-full bg-slate-800 p-1 border border-slate-700 transition-colors duration-300 focus:outline-none"
+            aria-label="Basculer facturation annuelle"
+          >
+            <div
+              className={`w-7 h-7 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 shadow-md transform transition-transform duration-300 ${
+                isAnnual ? 'translate-x-7' : 'translate-x-0'
+              }`}
+            />
+          </button>
+
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-bold transition ${isAnnual ? 'text-emerald-400 font-extrabold scale-105' : 'text-slate-400'}`}>
+              Facturation Annuelle
+            </span>
+            <span className="px-2.5 py-1 bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-300 border border-emerald-500/40 text-[11px] font-black rounded-full animate-pulse shadow-sm shadow-emerald-500/10">
+              🔥 -20% de réduction (1 seul paiement par an)
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-stretch">
           {/* Starter Plan */}
-          <div className="p-8 rounded-3xl border border-slate-800 bg-slate-900/70 backdrop-blur-xl space-y-6 flex flex-col justify-between hover:border-slate-700 transition">
+          <div className="p-6 rounded-3xl border border-slate-800 bg-slate-900/70 backdrop-blur-xl space-y-6 flex flex-col justify-between hover:border-slate-700 transition">
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Starter</span>
@@ -740,10 +933,16 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold text-white">29 €</span>
+                <span className="text-4xl font-extrabold text-white">
+                  {isAnnual ? `${PLANS.STARTER.priceAnnualMonthly} €` : `${PLANS.STARTER.priceMonthly} €`}
+                </span>
                 <span className="text-xs text-slate-400 font-medium">/ mois</span>
               </div>
-              <p className="text-xs text-brand-400 font-bold mt-1">14 jours d&apos;essai sans carte bancaire</p>
+              <p className="text-xs text-brand-400 font-bold mt-1">
+                {isAnnual
+                  ? `Facturé ${PLANS.STARTER.priceAnnualTotal} € par an en 1 seul paiement (-20%)`
+                  : "14 jours d'essai sans carte bancaire"}
+              </p>
 
               <ul className="mt-8 space-y-3 text-xs text-slate-300">
                 {PLANS.STARTER.features.map((f, i) => (
@@ -764,24 +963,30 @@ export default function LandingPage() {
           </div>
 
           {/* Pro Plan (Highlighted Most Popular) */}
-          <div className="p-8 rounded-3xl border-2 border-emerald-400 bg-slate-900/90 backdrop-blur-xl space-y-6 flex flex-col justify-between relative shadow-2xl shadow-emerald-500/10 hover:scale-[1.02] transition">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-emerald-400 to-emerald-500 text-slate-950 text-[11px] font-black uppercase tracking-wider rounded-full shadow-md">
-              🏆 PLUS POPULAIRE & RECOMMANDÉ
+          <div className="p-6 rounded-3xl border-2 border-emerald-400 bg-slate-900/90 backdrop-blur-xl space-y-6 flex flex-col justify-between relative shadow-2xl shadow-emerald-500/10 transition">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-0.5 bg-gradient-to-r from-emerald-400 to-emerald-500 text-slate-950 text-[10px] font-black uppercase tracking-wider rounded-full shadow-md whitespace-nowrap">
+              🏆 LE PLUS POPULAIRE
             </div>
 
             <div>
-              <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center justify-between pt-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Pro Illimité</span>
-                <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold rounded-full">
-                  Illimité
+                <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold rounded-full">
+                  Portails Illimités
                 </span>
               </div>
 
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold text-white">79 €</span>
+                <span className="text-4xl font-extrabold text-white">
+                  {isAnnual ? `${PLANS.PRO.priceAnnualMonthly} €` : `${PLANS.PRO.priceMonthly} €`}
+                </span>
                 <span className="text-xs text-slate-400 font-medium">/ mois</span>
               </div>
-              <p className="text-xs text-emerald-400 font-semibold mt-1">Logo personnalisé + Relances automatiques</p>
+              <p className="text-xs text-emerald-400 font-semibold mt-1">
+                {isAnnual
+                  ? `Facturé ${PLANS.PRO.priceAnnualTotal} € par an en 1 seul paiement (-20%)`
+                  : 'Logo personnalisé + Relances automatiques'}
+              </p>
 
               <ul className="mt-8 space-y-3 text-xs text-slate-200">
                 {PLANS.PRO.features.map((f, i) => (
@@ -797,12 +1002,12 @@ export default function LandingPage() {
               href="/register"
               className="w-full py-4 rounded-2xl text-xs font-black text-slate-950 bg-emerald-400 hover:bg-emerald-300 text-center shadow-xl shadow-emerald-500/20 transition block"
             >
-              Passer à Pro Illimité (79 €/mois) →
+              Passer à Pro Illimité ({isAnnual ? `${PLANS.PRO.priceAnnualMonthly} €/mois` : `${PLANS.PRO.priceMonthly} €/mois`}) →
             </Link>
           </div>
 
           {/* AI Enterprise Plan */}
-          <div className="p-8 rounded-3xl border border-indigo-900/80 bg-gradient-to-b from-indigo-950/90 to-slate-900/90 backdrop-blur-xl space-y-6 flex flex-col justify-between hover:border-indigo-700 transition">
+          <div className="p-6 rounded-3xl border border-indigo-900/80 bg-gradient-to-b from-indigo-950/90 to-slate-900/90 backdrop-blur-xl space-y-6 flex flex-col justify-between hover:border-indigo-700 transition">
             <div>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-extrabold uppercase tracking-wider text-indigo-300 flex items-center gap-1">
@@ -814,10 +1019,16 @@ export default function LandingPage() {
               </div>
 
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold text-white">149 €</span>
+                <span className="text-4xl font-extrabold text-white">
+                  {isAnnual ? `${PLANS.AI_ENTERPRISE.priceAnnualMonthly} €` : `${PLANS.AI_ENTERPRISE.priceMonthly} €`}
+                </span>
                 <span className="text-xs text-indigo-300 font-medium">/ mois</span>
               </div>
-              <p className="text-xs text-indigo-300 font-bold mt-1">Vérification Automatique par IA de tous les documents</p>
+              <p className="text-xs text-indigo-300 font-bold mt-1">
+                {isAnnual
+                  ? `Facturé ${PLANS.AI_ENTERPRISE.priceAnnualTotal} € par an en 1 seul paiement (-20%)`
+                  : 'Vérification Automatique par IA de tous les documents'}
+              </p>
 
               <ul className="mt-8 space-y-3 text-xs text-slate-200">
                 {PLANS.AI_ENTERPRISE.features.map((f, i) => (
@@ -833,10 +1044,61 @@ export default function LandingPage() {
               href="/register"
               className="w-full py-3.5 rounded-2xl text-xs font-extrabold text-white bg-indigo-500 hover:bg-indigo-400 text-center shadow-lg shadow-indigo-500/30 transition block"
             >
-              Activer IA Enterprise (149 €/mois) →
+              Activer IA Enterprise ({isAnnual ? `${PLANS.AI_ENTERPRISE.priceAnnualMonthly} €/mois` : `${PLANS.AI_ENTERPRISE.priceMonthly} €/mois`}) →
+            </Link>
+          </div>
+
+          {/* Agence Scale Plan (FAR RIGHT / LAST CARD - HIGH CONVERTING) */}
+          <div className="p-6 rounded-3xl border-2 border-cyan-400 bg-gradient-to-b from-cyan-950 via-slate-900 to-slate-950 backdrop-blur-xl space-y-6 flex flex-col justify-between relative shadow-2xl shadow-cyan-500/20 hover:scale-[1.02] transition">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 text-slate-950 text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg whitespace-nowrap animate-pulse">
+              🏆 OFFRE ULTIME & INTÉGRATIONS
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
+                  <Building2 className="h-4 w-4 text-cyan-400" /> Agence Scale
+                </span>
+                <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-bold rounded-full">
+                  300 contacts / mois
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-black text-white tracking-tight">
+                  {isAnnual ? `${PLANS.AGENCY_SCALE.priceAnnualMonthly} €` : `${PLANS.AGENCY_SCALE.priceMonthly} €`}
+                </span>
+                <span className="text-xs text-cyan-300 font-medium">/ mois</span>
+              </div>
+              <p className="text-xs text-cyan-300 font-bold mt-1">
+                {isAnnual
+                  ? `Facturé ${PLANS.AGENCY_SCALE.priceAnnualTotal} € par an (-20%)`
+                  : '0,82 € / contact • Webhooks, API & 20 utilisateurs'}
+              </p>
+
+              <ul className="mt-8 space-y-3 text-xs text-slate-200">
+                {PLANS.AGENCY_SCALE.features.map((f, i) => (
+                  <li key={i} className="flex items-center gap-2.5">
+                    <CheckCircle2 className="h-4 w-4 text-cyan-400 shrink-0" />
+                    <span className={f.includes('Intégration') ? 'font-black text-cyan-200 underline decoration-cyan-400/50' : ''}>
+                      {f}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <Link
+              href="/register"
+              className="w-full py-4 rounded-2xl text-xs font-black text-slate-950 bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-center shadow-xl shadow-cyan-500/30 transition block transform hover:scale-[1.02]"
+            >
+              Démarrer Agence Scale ({isAnnual ? `${PLANS.AGENCY_SCALE.priceAnnualMonthly} €/mois` : `${PLANS.AGENCY_SCALE.priceMonthly} €`}) →
             </Link>
           </div>
         </div>
+
+        {/* Complete Feature Comparison Table */}
+        <PricingComparisonTable isAnnual={isAnnual} />
       </section>
 
       {/* Testimonials Section */}
@@ -915,6 +1177,55 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* SEO Articles & Resources Section */}
+      <section id="blog-preview" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-800/80">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+          <div className="space-y-2">
+            <span className="text-xs font-extrabold uppercase tracking-widest text-brand-400 flex items-center gap-1.5">
+              <BookOpen className="h-4 w-4" /> Centre de Ressources & Guides SEO
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+              Derniers articles & conseils d'experts
+            </h2>
+          </div>
+          <Link
+            href="/blog"
+            className="inline-flex items-center gap-2 text-xs font-extrabold text-brand-400 hover:text-brand-300 transition group"
+          >
+            Voir tous nos guides & articles <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {BLOG_ARTICLES.slice(0, 3).map((art) => (
+            <article
+              key={art.slug}
+              className="p-6 rounded-3xl bg-slate-900/70 border border-slate-800 hover:border-brand-500/50 transition flex flex-col justify-between space-y-4 group backdrop-blur-xl hover:-translate-y-1"
+            >
+              <div className="space-y-3">
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-brand-300 border border-slate-700 text-[10px] font-bold">
+                  {art.category}
+                </span>
+                <h3 className="text-base font-bold text-white group-hover:text-brand-300 transition-colors leading-snug">
+                  <Link href={`/blog/${art.slug}`}>
+                    {art.title}
+                  </Link>
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">
+                  {art.description}
+                </p>
+              </div>
+              <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs">
+                <span className="text-slate-500 font-mono text-[11px]">{art.readTime}</span>
+                <Link href={`/blog/${art.slug}`} className="text-brand-400 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                  Lire l'article <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -1026,7 +1337,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-3">
             <FylynxLogo size="sm" variant="dark" />
             <span className="text-slate-500 font-mono text-[11px]">
-              © {new Date().getFullYear()} Fylynx.app — Solution Sécurisée RGPD B2B.
+              © {new Date().getFullYear()} fylinx.com — Solution Sécurisée RGPD B2B.
             </span>
           </div>
 
@@ -1037,9 +1348,12 @@ export default function LandingPage() {
             <a href="#tarifs" className="hover:text-white transition">
               Tarifs
             </a>
-            <a href="#faq" className="hover:text-white transition">
-              FAQ
-            </a>
+            <Link href="/blog" className="hover:text-white transition">
+              Blog & Guide SEO
+            </Link>
+            <Link href="/aide" className="hover:text-white transition">
+              Centre d'aide
+            </Link>
             <Link href="/login" className="hover:text-white transition">
               Connexion
             </Link>

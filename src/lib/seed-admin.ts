@@ -19,7 +19,7 @@ export async function ensureAdminUser() {
     return updated;
   }
 
-  const oldAdmin = await db.user.findUnique({ where: { email: 'admin@fylynx.app' } });
+  const oldAdmin = await db.user.findUnique({ where: { email: 'admin@fylinx.com' } });
   if (oldAdmin) {
     const updated = await db.user.update({
       where: { id: oldAdmin.id },

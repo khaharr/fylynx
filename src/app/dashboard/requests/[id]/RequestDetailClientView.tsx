@@ -22,6 +22,7 @@ import {
   Sparkles,
   Lock,
   ShieldCheck,
+  Camera,
 } from 'lucide-react';
 import AiVerificationBadge from '@/components/AiVerificationBadge';
 
@@ -68,6 +69,7 @@ export default function RequestDetailClientView({
 }) {
   const [request, setRequest] = useState<FolderRequestDetail>(initialRequest);
   const [selectedRequirement, setSelectedRequirement] = useState<RequirementItem | null>(null);
+  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [isReminding, setIsReminding] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -116,6 +118,22 @@ export default function RequestDetailClientView({
   const totalDocs = request.documentRequirements.length;
   const validatedDocs = request.documentRequirements.filter((r) => r.status === 'VALIDATED').length;
 
+  const handleQuickValidate = async (requirementId: string) => {
+    try {
+      const res = await fetch(`/api/documents/${requirementId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'VALIDATED' }),
+      });
+      if (res.ok) {
+        setNotice('Document validé avec succès !');
+        refreshDetail();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-brand-500 selection:text-white">
       <Navbar />
@@ -147,9 +165,13 @@ export default function RequestDetailClientView({
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-extrabold rounded-full">
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" /> Complet & Validé
                 </span>
+              ) : request.status === 'IN_REVIEW' ? (
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-extrabold rounded-full animate-pulse-subtle">
+                  <Clock className="h-3.5 w-3.5 text-amber-400" /> Action Requise : Pièces déposées à vérifier ({validatedDocs}/{totalDocs} validés)
+                </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-extrabold rounded-full">
-                  <Clock className="h-3.5 w-3.5 text-amber-400" /> En cours ({validatedDocs}/{totalDocs} validés)
+                <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-800 text-slate-300 border border-slate-700 text-xs font-extrabold rounded-full">
+                  <Clock className="h-3.5 w-3.5 text-amber-400" /> En attente du client ({validatedDocs}/{totalDocs} validés)
                 </span>
               )}
             </div>
@@ -242,10 +264,9 @@ export default function RequestDetailClientView({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {request.documentRequirements.map((req) => {
-              const file = req.files[0];
               const isValidated = req.status === 'VALIDATED';
               const isRejected = req.status === 'REJECTED';
-              const hasFile = Boolean(file);
+              const hasFiles = req.files.length > 0;
 
               return (
                 <div
@@ -255,6 +276,8 @@ export default function RequestDetailClientView({
                       ? 'bg-emerald-950/20 border-emerald-500/30'
                       : isRejected
                       ? 'bg-rose-950/20 border-rose-500/30'
+                      : hasFiles
+                      ? 'bg-amber-950/20 border-amber-500/40'
                       : 'bg-slate-900/80 border-slate-800'
                   }`}
                 >
@@ -274,9 +297,13 @@ export default function RequestDetailClientView({
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/40">
                         <XCircle className="h-3.5 w-3.5 text-rose-400" /> Rejeté
                       </span>
-                    ) : (
+                    ) : hasFiles ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                        <Clock className="h-3.5 w-3.5 text-amber-400" /> En attente
+                        <Clock className="h-3.5 w-3.5 text-amber-400" /> À Vérifier ({req.files.length} fichier(s))
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+                        <Clock className="h-3.5 w-3.5 text-slate-500" /> En attente
                       </span>
                     )}
                   </div>
@@ -291,7 +318,7 @@ export default function RequestDetailClientView({
                         aiAnalysisDetails={req.aiAnalysisDetails || null}
                       />
                     </div>
-                  ) : hasFile && request.user.subscriptionStatus !== 'AI_ENTERPRISE' && request.user.role !== 'ADMIN' && (
+                  ) : hasFiles && request.user.subscriptionStatus !== 'AI_ENTERPRISE' && request.user.role !== 'ADMIN' && (
                     <div className="mb-3 p-3 bg-slate-950/90 border border-indigo-500/30 rounded-2xl flex items-center justify-between text-xs text-slate-300">
                       <div className="flex items-center gap-2">
                         <Lock className="h-4 w-4 text-indigo-400 shrink-0" />
@@ -303,19 +330,100 @@ export default function RequestDetailClientView({
                     </div>
                   )}
 
-                  {/* File preview or status */}
-                  {hasFile ? (
-                    <div className="p-3 bg-slate-950 rounded-2xl border border-slate-800 text-slate-200 flex items-center justify-between">
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <FileText className="h-5 w-5 text-brand-400 shrink-0" />
-                        <span className="text-xs font-mono truncate text-slate-200">{file.fileName}</span>
+                  {/* Deposited files list & action buttons */}
+                  {hasFiles ? (
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        {req.files.map((file) => {
+                          const isRecto = file.fileName.toUpperCase().startsWith('RECTO_');
+                          const isVerso = file.fileName.toUpperCase().startsWith('VERSO_');
+                          const fileUrl = `/api/upload/local?key=${encodeURIComponent(file.fileKey)}`;
+                          const downloadUrl = `/api/upload/local?key=${encodeURIComponent(file.fileKey)}&download=1`;
+
+                          return (
+                            <div
+                              key={file.id}
+                              className="p-2.5 bg-slate-950 rounded-2xl border border-slate-800 text-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs"
+                            >
+                              <div className="flex items-center gap-2 overflow-hidden">
+                                {isRecto ? (
+                                  <Camera className="h-4 w-4 text-emerald-400 shrink-0" />
+                                ) : isVerso ? (
+                                  <Camera className="h-4 w-4 text-indigo-400 shrink-0" />
+                                ) : (
+                                  <FileText className="h-4 w-4 text-brand-400 shrink-0" />
+                                )}
+                                <div className="flex flex-col">
+                                  <span className="font-mono text-slate-200 font-bold truncate">
+                                    {isRecto ? 'Face RECTO' : isVerso ? 'Face VERSO' : file.fileName}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400 font-mono">
+                                    {file.fileName} ({(file.fileSize / 1024 / 1024).toFixed(2)} Mo)
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedRequirement(req);
+                                    setSelectedFileId(file.id);
+                                  }}
+                                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 rounded-xl font-bold text-xs flex items-center gap-1 transition"
+                                >
+                                  <Eye className="h-3.5 w-3.5 text-indigo-400" /> Aperçu
+                                </button>
+
+                                <a
+                                  href={downloadUrl}
+                                  download={file.fileName}
+                                  className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 rounded-xl font-bold text-xs flex items-center gap-1 transition"
+                                >
+                                  <Download className="h-3.5 w-3.5 text-emerald-400" /> Télécharger
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <button
-                        onClick={() => setSelectedRequirement(req)}
-                        className="px-3.5 py-1.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shrink-0 ml-2 shadow-md shadow-brand-500/20"
-                      >
-                        <Eye className="h-3.5 w-3.5" /> Inspecter
-                      </button>
+
+                      {/* Direct 1-Click Action Buttons */}
+                      <div className="pt-2 border-t border-slate-800/80 flex flex-wrap items-center gap-2">
+                        {!isValidated && (
+                          <button
+                            type="button"
+                            onClick={() => handleQuickValidate(req.id)}
+                            className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition shadow-lg shadow-emerald-600/20"
+                          >
+                            <CheckCircle2 className="h-4 w-4" /> Valider l&apos;ensemble
+                          </button>
+                        )}
+
+                        {!isRejected && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedRequirement(req);
+                              setSelectedFileId(null);
+                            }}
+                            className="flex-1 py-2 px-3 bg-rose-950 hover:bg-rose-900 text-rose-300 border border-rose-700/60 rounded-xl text-xs font-extrabold flex items-center justify-center gap-1.5 transition"
+                          >
+                            <XCircle className="h-4 w-4 text-rose-400" /> Rejeter
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedRequirement(req);
+                            setSelectedFileId(null);
+                          }}
+                          className="py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition"
+                        >
+                          <Eye className="h-4 w-4 text-indigo-400" /> Inspecter ({req.files.length})
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <div className="p-3.5 bg-slate-950/60 border border-dashed border-slate-800 rounded-2xl text-xs text-slate-500 text-center">
@@ -348,8 +456,12 @@ export default function RequestDetailClientView({
         {/* Modal Inspector Component */}
         <DocumentPreviewModal
           isOpen={Boolean(selectedRequirement)}
-          onClose={() => setSelectedRequirement(null)}
+          onClose={() => {
+            setSelectedRequirement(null);
+            setSelectedFileId(null);
+          }}
           requirement={selectedRequirement}
+          initialFileId={selectedFileId}
           onStatusUpdated={refreshDetail}
         />
       </main>

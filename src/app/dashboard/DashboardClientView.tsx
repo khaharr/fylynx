@@ -27,6 +27,7 @@ import {
   List,
   Mail,
   Calendar,
+  FileSpreadsheet,
 } from 'lucide-react';
 
 interface FileItem {
@@ -123,13 +124,17 @@ export default function DashboardClientView({
     setIsRemindingAll(true);
     setCronNotice(null);
     try {
-      const res = await fetch('/api/cron/remind');
+      const res = await fetch('/api/requests/remind-pending', {
+        method: 'POST',
+      });
       const data = await res.json();
       if (res.ok) {
         setCronNotice(
-          `Relances automatiques Email exécutées avec succès ! ${data.processedCount} dossier(s) incomplet(s) relancé(s).`
+          data.message || `Relances envoyées avec succès à ${data.processedCount} client(s) incomplet(s) !`
         );
         refreshRequests();
+      } else {
+        alert(data.error || 'Erreur lors de l\'envoi des relances');
       }
     } catch (err) {
       console.error(err);
@@ -148,6 +153,54 @@ export default function DashboardClientView({
     }
   };
 
+  const handleExportCSV = () => {
+    const headers = [
+      'ID Reference',
+      'Nom Client',
+      'Email Client',
+      'Telephone',
+      'Statut Dossier',
+      'Pieces Validees',
+      'Total Pieces Exigees',
+      'Nombre de Relances',
+      'Date de Creation',
+      'Lien Portail Client 1-Clic',
+    ];
+
+    const rows = filteredRequests.map((r) => {
+      const validCount = r.documentRequirements.filter((req) => req.status === 'VALIDATED').length;
+      const statusLabel =
+        r.status === 'COMPLETED'
+          ? 'Complet & Certifie'
+          : r.status === 'IN_REVIEW'
+          ? 'A Inspecter'
+          : 'Incomplet';
+
+      return [
+        `"${r.id}"`,
+        `"${r.clientName.replace(/"/g, '""')}"`,
+        `"${r.clientEmail.replace(/"/g, '""')}"`,
+        `"${(r.clientPhone || '').replace(/"/g, '""')}"`,
+        `"${statusLabel}"`,
+        validCount,
+        r.documentRequirements.length,
+        r.reminderCount,
+        `"${new Date(r.createdAt).toLocaleDateString('fr-FR')}"`,
+        `"${window.location.origin}/d/${r.token}"`,
+      ];
+    });
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map((row) => row.join(';'))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `fylynx_dossiers_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Stats calculation
   const totalCount = requests.length;
   const pendingCount = requests.filter((r) => r.status === 'PENDING').length;
@@ -155,9 +208,14 @@ export default function DashboardClientView({
   const completedCount = requests.filter((r) => r.status === 'COMPLETED').length;
 
   const filteredRequests = requests.filter((r) => {
+    const query = searchQuery.toLowerCase().trim();
     const matchesSearch =
-      r.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.clientEmail.toLowerCase().includes(searchQuery.toLowerCase());
+      !query ||
+      r.clientName.toLowerCase().includes(query) ||
+      r.clientEmail.toLowerCase().includes(query) ||
+      (r.clientPhone && r.clientPhone.toLowerCase().includes(query)) ||
+      r.token.toLowerCase().includes(query) ||
+      r.id.toLowerCase().includes(query);
 
     if (activeTab === 'ALL') return matchesSearch;
     return matchesSearch && r.status === activeTab;
@@ -180,7 +238,7 @@ export default function DashboardClientView({
                   Espace Administrateur HQ Master
                 </span>
                 <p className="text-xs text-slate-300 mt-0.5">
-                  Connecté avec privilèges Administrateur (admin@fylynx.app). Accès à tous les comptes et stockage centralisé.
+                  Connecté avec privilèges Administrateur (admin@fylinx.com). Accès à tous les comptes et stockage centralisé.
                 </p>
               </div>
             </div>
@@ -199,14 +257,14 @@ export default function DashboardClientView({
             <div className="flex items-center gap-2.5">
               <Zap className="h-5 w-5 text-amber-400 shrink-0 fill-amber-400" />
               <span>
-                Formule Starter : <strong className="text-white">{totalCount}/30 dossiers</strong> utilisés. Les relances automatiques quotidiennes sont incluses dans la formule Pro (79€/mois).
+                Formule Starter : <strong className="text-white">{totalCount}/10 portails de collecte</strong> utilisés. Les relances automatiques quotidiennes sont incluses dès la formule Pro Illimité (79€/mois ou 63€/mois en annuel).
               </span>
             </div>
             <Link
               href="/dashboard/settings"
               className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-2xl font-extrabold shrink-0 text-center transition shadow-md shadow-amber-500/20"
             >
-              Passer au Forfait Pro (79€) →
+              Passer au Forfait Pro (79€/mois) →
             </Link>
           </div>
         )}
@@ -399,16 +457,27 @@ export default function DashboardClientView({
               </button>
             </div>
 
-            {/* Search bar */}
-            <div className="relative flex-1 sm:w-72">
-              <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
-              <input
-                type="text"
-                placeholder="Rechercher nom, email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-950 border border-slate-800 rounded-2xl text-white placeholder:text-slate-500 focus:ring-2 focus:ring-brand-500 focus:outline-none"
-              />
+            {/* Search bar & Export CSV */}
+            <div className="flex items-center gap-2 flex-1 sm:w-80">
+              <div className="relative flex-1">
+                <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Rechercher nom, email, réf..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-950 border border-slate-800 rounded-2xl text-white placeholder:text-slate-500 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                />
+              </div>
+
+              <button
+                onClick={handleExportCSV}
+                title="Exporter l'ensemble de la liste filtrée au format CSV pour votre comptabilité"
+                className="px-3.5 py-2.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/60 rounded-2xl text-xs font-extrabold flex items-center gap-1.5 shrink-0 transition shadow-sm"
+              >
+                <FileSpreadsheet className="h-4 w-4 text-emerald-400" />
+                <span className="hidden sm:inline">Export CSV</span>
+              </button>
             </div>
           </div>
         </div>

@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { sendReminderEmail } from '@/lib/email';
+import { triggerFolderCompletedWebhook } from '@/lib/webhooks';
 
 const updateStatusSchema = z.object({
   status: z.enum(['VALIDATED', 'REJECTED', 'WAITING']),
@@ -58,6 +59,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         where: { id: folderRequest.id },
         data: { status: newFolderStatus },
       });
+    }
+
+    if (newFolderStatus === 'COMPLETED' || allValidated) {
+      triggerFolderCompletedWebhook(folderRequest.id).catch(console.error);
     }
 
     // Send email notification to client if rejected

@@ -9,7 +9,7 @@ export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
-  const user = (await getCurrentUser()) || (await db.user.findFirst({ where: { email: 'admin@fylynx.app' } }));
+  const user = (await getCurrentUser()) || (await db.user.findFirst({ where: { email: 'admin@fylinx.com' } }));
   if (!user) {
     redirect('/login');
   }

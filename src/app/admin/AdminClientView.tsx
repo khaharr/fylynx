@@ -8,6 +8,7 @@ import {
   Folder,
   Zap,
   Bot,
+  Building2,
   CheckCircle2,
   Clock,
   Search,
@@ -210,6 +211,10 @@ export default function AdminClientView({
                           <span className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 text-xs font-extrabold rounded-full">
                             <Bot className="h-3.5 w-3.5 text-indigo-400" /> IA Enterprise (149€)
                           </span>
+                        ) : u.subscriptionStatus === 'AGENCY_SCALE' ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-extrabold rounded-full">
+                            <Building2 className="h-3.5 w-3.5 text-cyan-400" /> Agence Scale (247€ / 230€)
+                          </span>
                         ) : u.subscriptionStatus === 'PRO' ? (
                           <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-extrabold rounded-full">
                             <Zap className="h-3.5 w-3.5 fill-emerald-400" /> Pro (79€)
@@ -238,6 +243,7 @@ export default function AdminClientView({
                         >
                           <option value="STARTER">Starter (29€ - Essai 14j)</option>
                           <option value="PRO">Forfait Pro (79€)</option>
+                          <option value="AGENCY_SCALE">Agence Scale (247€ / 230€)</option>
                           <option value="AI_ENTERPRISE">Forfait IA Enterprise (149€)</option>
                           <option value="CANCELED">Bloquer / Résilié / Expiré</option>
                         </select>

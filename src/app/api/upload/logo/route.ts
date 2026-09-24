@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import fs from 'fs';
-import path from 'path';
+import { uploadFileToGoogleDrive } from '@/lib/google-drive';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,9 +20,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Utilisateur introuvable' }, { status: 404 });
     }
 
-    // Subscription check: PRO, AI_ENTERPRISE, ADMIN
+    // Subscription check: PRO, AGENCY_SCALE, AI_ENTERPRISE, ADMIN
     const canUseBranding =
       dbUser.subscriptionStatus === 'PRO' ||
+      dbUser.subscriptionStatus === 'AGENCY_SCALE' ||
       dbUser.subscriptionStatus === 'AI_ENTERPRISE' ||
       dbUser.role === 'ADMIN';
 
@@ -61,35 +61,40 @@ export async function POST(req: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Save to public/uploads/logos directory
-    const logosDir = path.join(process.cwd(), 'public', 'uploads', 'logos');
-    if (!fs.existsSync(logosDir)) {
-      fs.mkdirSync(logosDir, { recursive: true });
-    }
-
     const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
     const ext = extMatch ? extMatch[1].toLowerCase() : 'png';
     const fileName = `logo_${dbUser.id}_${Date.now()}.${ext}`;
-    const filePath = path.join(logosDir, fileName);
 
-    fs.writeFileSync(filePath, buffer);
+    // 100% Upload directly to Google Drive Master (No local disk storage)
+    const driveResult = await uploadFileToGoogleDrive({
+      fileName,
+      mimeType: file.type || 'image/png',
+      buffer,
+    });
 
-    const publicUrl = `/uploads/logos/${fileName}`;
+    let logoUrl: string;
+    if (driveResult && driveResult.fileId) {
+      logoUrl = `/api/upload/local?key=drive_${driveResult.fileId}`;
+    } else {
+      // Fallback data URI for instant display if drive unconfigured
+      const base64Data = buffer.toString('base64');
+      logoUrl = `data:${file.type || 'image/png'};base64,${base64Data}`;
+    }
 
-    // Update user record in DB
+    // Update user record in DB with Google Drive logo URL
     await db.user.update({
       where: { id: dbUser.id },
       data: {
-        companyLogo: publicUrl,
+        companyLogo: logoUrl,
       },
     });
 
     return NextResponse.json({
       success: true,
-      logoUrl: publicUrl,
+      logoUrl,
     });
   } catch (error) {
-    console.error('Erreur API upload logo:', error);
-    return NextResponse.json({ error: 'Erreur lors du téléchargement du logo' }, { status: 500 });
+    console.error('Erreur API upload logo Google Drive:', error);
+    return NextResponse.json({ error: 'Erreur lors du téléchargement du logo vers Google Drive' }, { status: 500 });
   }
 }

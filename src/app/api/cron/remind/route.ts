@@ -24,7 +24,7 @@ export async function GET(req: Request) {
         reminderCount: { lt: 3 },
         createdAt: { lte: twentyFourHoursAgo },
         user: {
-          subscriptionStatus: { in: ['PRO', 'AI_ENTERPRISE'] },
+          subscriptionStatus: { in: ['PRO', 'AGENCY_SCALE', 'AI_ENTERPRISE'] },
         },
         OR: [
           { lastRemindedAt: null },
@@ -62,6 +62,8 @@ export async function GET(req: Request) {
         folderTitle: `Rappel de dépôt de pièces`,
         depositLink,
         missingDocTitles,
+        customSubject: folder.user.reminderEmailSubject,
+        customBody: folder.user.reminderEmailBody,
       });
 
       await db.folderRequest.update({

@@ -6,7 +6,7 @@ import { db } from '@/lib/db';
 
 export async function POST(req: Request) {
   try {
-    const user = await db.user.findFirst({ where: { email: 'demo@fylynx.app' } });
+    const user = await db.user.findFirst({ where: { email: 'demo@fylinx.com' } });
     if (!user) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }

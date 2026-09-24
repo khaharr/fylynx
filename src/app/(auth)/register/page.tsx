@@ -370,7 +370,7 @@ export default function RegisterPage() {
 
         {/* Footer info */}
         <div className="text-center text-[11px] text-slate-600">
-          © Fylynx.app — Inscription protégée par Captcha, rate limiting et chiffrée selon le RGPD.
+          © fylinx.com — Inscription protégée par Captcha, rate limiting et chiffrée selon le RGPD.
         </div>
       </div>
     </div>

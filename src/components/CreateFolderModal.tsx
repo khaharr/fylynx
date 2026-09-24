@@ -18,6 +18,7 @@ import {
   MessageSquare,
   ShieldCheck,
   Zap,
+  Layers,
 } from 'lucide-react';
 
 interface TemplateItem {
@@ -42,10 +43,12 @@ export default function CreateFolderModal({
   const [clientEmail, setClientEmail] = useState('');
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [documentTitles, setDocumentTitles] = useState<string[]>([
-    'Pièce d\'identité (CNI / Passeport)',
+    'Pièce d\'identité (CNI / Passeport) (Recto + Verso)',
     'Justificatif de domicile (-3 mois)',
   ]);
   const [customTitle, setCustomTitle] = useState('');
+  const [isRectoVerso, setIsRectoVerso] = useState(false);
+  const [quantity, setQuantity] = useState(1);
   const [sendNotification, setSendNotification] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdLink, setCreatedLink] = useState<string | null>(null);
@@ -65,8 +68,22 @@ export default function CreateFolderModal({
 
   const handleAddTitle = () => {
     if (!customTitle.trim()) return;
-    setDocumentTitles((prev) => [...prev, customTitle.trim()]);
+    const baseTitle = customTitle.trim();
+    const rvTag = isRectoVerso ? ' (Recto + Verso)' : '';
+    const newItems: string[] = [];
+
+    if (quantity > 1) {
+      for (let i = 1; i <= quantity; i++) {
+        newItems.push(`${baseTitle} #${i}${rvTag}`);
+      }
+    } else {
+      newItems.push(`${baseTitle}${rvTag}`);
+    }
+
+    setDocumentTitles((prev) => [...prev, ...newItems]);
     setCustomTitle('');
+    setIsRectoVerso(false);
+    setQuantity(1);
   };
 
   const handleRemoveTitle = (index: number) => {
@@ -367,28 +384,99 @@ export default function CreateFolderModal({
                 ))}
               </div>
 
-              {/* Add Custom Title Input */}
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="text"
-                  placeholder="Ajouter une autre pièce (ex: RIB, Kbis...)"
-                  value={customTitle}
-                  onChange={(e) => setCustomTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddTitle();
-                    }
-                  }}
-                  className="flex-1 px-3.5 py-2 text-xs bg-slate-950 border border-slate-800 rounded-xl text-white placeholder:text-slate-600 focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddTitle}
-                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1 border border-slate-700 transition"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Ajouter
-                </button>
+              {/* Add Custom Title Input & Recto-Verso / Quantity Controls */}
+              <div className="space-y-2 pt-1 border-t border-slate-800/80">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="ex: Carte d'Identité, Bulletins de paie..."
+                    value={customTitle}
+                    onChange={(e) => setCustomTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddTitle();
+                      }
+                    }}
+                    className="flex-1 px-3.5 py-2 text-xs bg-slate-950 border border-slate-800 rounded-xl text-white placeholder:text-slate-600 focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddTitle}
+                    className="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-extrabold flex items-center gap-1 transition shadow-md shrink-0"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Ajouter
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+                  {/* Recto-Verso Option Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setIsRectoVerso(!isRectoVerso)}
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-extrabold flex items-center gap-1.5 transition ${
+                      isRectoVerso
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                        : 'bg-slate-900 text-slate-400 hover:text-white border border-slate-800'
+                    }`}
+                  >
+                    <Layers className="h-3.5 w-3.5 text-emerald-400" />
+                    {isRectoVerso ? '✓ Format Recto + Verso Exigé' : '+ Option Recto / Verso'}
+                  </button>
+
+                  {/* Quantity Selector */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-400 text-[11px] font-bold">Quantité :</span>
+                    <select
+                      value={quantity}
+                      onChange={(e) => setQuantity(Number(e.target.value))}
+                      className="bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white font-bold focus:outline-none"
+                    >
+                      <option value={1}>1 document</option>
+                      <option value={2}>2 exemplaires</option>
+                      <option value={3}>3 exemplaires</option>
+                      <option value={5}>5 exemplaires</option>
+                      <option value={10}>10 exemplaires</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Quick Presets Bar */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] text-slate-500 font-bold uppercase">Raccourcis :</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDocumentTitles((prev) => [...prev, 'Carte Nationale d\'Identité (Recto + Verso)']);
+                    }}
+                    className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded text-[10px] font-semibold border border-slate-800 transition"
+                  >
+                    + CNI (Recto+Verso)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDocumentTitles((prev) => [...prev, 'Permis de Conduire (Recto + Verso)']);
+                    }}
+                    className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded text-[10px] font-semibold border border-slate-800 transition"
+                  >
+                    + Permis (Recto+Verso)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDocumentTitles((prev) => [
+                        ...prev,
+                        'Bulletin de salaire #1 (-1 mois)',
+                        'Bulletin de salaire #2 (-2 mois)',
+                        'Bulletin de salaire #3 (-3 mois)',
+                      ]);
+                    }}
+                    className="px-2 py-0.5 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded text-[10px] font-semibold border border-slate-800 transition"
+                  >
+                    + 3 Bulletins de Salaire
+                  </button>
+                </div>
               </div>
             </div>
 

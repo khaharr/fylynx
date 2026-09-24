@@ -25,6 +25,19 @@ model User {
   customWelcomeMsg     String?
   brandColor           String?          @default("#4f46e5")
   
+  // Intégrations API, Webhooks, Notion & CRM (Seulement Pro Illimité & IA Enterprise)
+  apiKey               String?          @unique
+  webhookUrl           String?
+  webhookEvents        String?          @default("request.completed")
+  notionToken          String?
+  notionDatabaseId     String?
+
+  // Modèles d'e-mails de relance personnalisés
+  inviteEmailSubject   String?
+  inviteEmailBody      String?
+  reminderEmailSubject String?
+  reminderEmailBody    String?
+  
   // Offre de Lancement : 14 jours d'essai gratuit sur la formule Starter
   trialEndsAt          DateTime?
 
@@ -36,6 +49,21 @@ model User {
   updatedAt            DateTime         @updatedAt
   folderTemplates      FolderTemplate[]
   folderRequests       FolderRequest[]
+  teamMembers          TeamMember[]     @relation("OwnerTeam")
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     User     @relation("OwnerTeam", fields: [ownerId], references: [id], onDelete: Cascade)
+  email     String
+  name      String?
+  role      String   @default("COLLABORATOR") // COLLABORATOR, MANAGER
+  status    String   @default("ACTIVE") // PENDING, ACTIVE
+  createdAt DateTime @default(now())
+
+  @@unique([ownerId, email])
+  @@index([ownerId])
 }
 
 model FolderTemplate {

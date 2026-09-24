@@ -227,7 +227,7 @@ export default function LoginPage() {
 
         {/* Footer info */}
         <div className="text-center text-[11px] text-slate-600">
-          © Fylynx.app — Solution sécurisée de collecte documentaire B2B.
+          © fylinx.com — Solution sécurisée de collecte documentaire B2B.
         </div>
       </div>
     </div>

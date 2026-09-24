@@ -28,18 +28,17 @@ export default function FylynxLogo({
   const currentSize = sizeClasses[size];
 
   const logoContent = (
-    <div className={`inline-flex items-center gap-3 ${className}`}>
-      {/* Custom Stylized "F" Emblem */}
+    <div className={`inline-flex items-center gap-2.5 ${className}`}>
+      {/* Official Fylynx Lynx Logo Emblem */}
       <div
-        className={`relative flex ${currentSize.box} items-center justify-center bg-gradient-to-tr from-brand-600 via-indigo-600 to-violet-500 text-white font-black shadow-xl shadow-brand-500/25 ring-2 ring-white/10 group overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-brand-500/40`}
+        className={`relative flex ${currentSize.box} items-center justify-center bg-slate-900/90 rounded-xl p-1 shadow-lg shadow-brand-500/20 ring-1 ring-brand-500/30 group overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-brand-500/40 shrink-0`}
       >
-        {/* Subtle Inner Glow */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent opacity-50" />
-        <span className={`relative z-10 ${currentSize.fSize} tracking-tighter drop-shadow-md select-none font-mono`}>
-          F
-        </span>
-        {/* Futuristic accent dot */}
-        <div className="absolute bottom-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400 animate-pulse" />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/fylynx-logo.png"
+          alt="Fylynx Logo"
+          className="h-full w-full object-contain drop-shadow"
+        />
       </div>
 
       {showText && (

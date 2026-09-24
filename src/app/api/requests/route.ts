@@ -17,13 +17,23 @@ const createRequestSchema = z.object({
 
 export async function GET(req: Request) {
   try {
-    const user = (await getCurrentUser()) || (await db.user.findFirst({ where: { email: 'demo@fylynx.app' } }));
+    const user = (await getCurrentUser()) || (await db.user.findFirst({ where: { email: 'demo@fylinx.com' } }));
     if (!user) {
       return NextResponse.json({ requests: [] });
     }
 
+    // Check if user is a team member of an owner account
+    const teamRecord = await db.teamMember.findFirst({
+      where: { email: user.email.toLowerCase() },
+    });
+
+    const targetUserIds = [user.id];
+    if (teamRecord) {
+      targetUserIds.push(teamRecord.ownerId);
+    }
+
     const requests = await db.folderRequest.findMany({
-      where: { userId: user.id },
+      where: { userId: { in: targetUserIds } },
       include: {
         documentRequirements: {
           include: { files: true },
@@ -41,7 +51,31 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const user = (await getCurrentUser()) || (await db.user.findFirst({ where: { email: 'demo@fylynx.app' } }));
+    const authHeader = req.headers.get('authorization');
+    let user = await getCurrentUser();
+
+    if (!user && authHeader && authHeader.startsWith('Bearer ')) {
+      const apiKey = authHeader.replace('Bearer ', '').trim();
+      const dbUser = await db.user.findUnique({ where: { apiKey } });
+      if (dbUser) {
+        user = {
+          id: dbUser.id,
+          name: dbUser.name,
+          email: dbUser.email,
+          role: dbUser.role,
+          subscriptionStatus: dbUser.subscriptionStatus,
+          companyName: dbUser.companyName,
+          companyLogo: dbUser.companyLogo,
+          customWelcomeMsg: dbUser.customWelcomeMsg,
+          brandColor: dbUser.brandColor,
+        };
+      }
+    }
+
+    if (!user) {
+      user = await db.user.findFirst({ where: { email: 'demo@fylinx.com' } });
+    }
+
     if (!user) {
       return NextResponse.json({ error: 'Utilisateur non authentifié' }, { status: 401 });
     }
@@ -72,7 +106,7 @@ export async function POST(req: Request) {
 
     const finalClientEmail = clientEmail && clientEmail.trim().length > 0
       ? clientEmail.trim()
-      : `lien-direct-${token.slice(4, 8)}@fylynx.app`;
+      : `lien-direct-${token.slice(4, 8)}@fylinx.com`;
 
     const folderRequest = await db.folderRequest.create({
       data: {
@@ -98,7 +132,7 @@ export async function POST(req: Request) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const depositLink = `${appUrl}/d/${token}`;
 
-    const hasRealEmail = clientEmail && clientEmail.includes('@') && !clientEmail.endsWith('@fylynx.app');
+    const hasRealEmail = clientEmail && clientEmail.includes('@') && !clientEmail.endsWith('@fylinx.com');
 
     if (sendNotification && hasRealEmail) {
       await sendReminderEmail({

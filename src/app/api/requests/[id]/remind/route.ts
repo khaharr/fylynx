@@ -7,7 +7,7 @@ import { sendReminderEmail } from '@/lib/email';
 
 export async function POST(req: Request, { params }: { params: { id: string } }) {
   try {
-    const user = (await getCurrentUser()) || (await db.user.findFirst({ where: { email: 'admin@fylynx.app' } }));
+    const user = (await getCurrentUser()) || (await db.user.findFirst({ where: { email: 'admin@fylinx.com' } }));
     if (!user) {
       return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
     }
@@ -57,6 +57,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       folderTitle: `Rappel : Compléter votre dossier de pièces justificatives`,
       depositLink,
       missingDocTitles,
+      customSubject: folderRequest.user.reminderEmailSubject,
+      customBody: folderRequest.user.reminderEmailBody,
     });
 
     if (!result.success) {
