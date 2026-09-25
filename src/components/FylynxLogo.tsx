@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface FylynxLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -59,8 +60,10 @@ export default function FylynxLogo({
     </div>
   );
 
+  const { getLocalizedHref } = useLanguage();
+
   if (href) {
-    return <Link href={href}>{logoContent}</Link>;
+    return <Link href={getLocalizedHref(href)}>{logoContent}</Link>;
   }
 
   return logoContent;

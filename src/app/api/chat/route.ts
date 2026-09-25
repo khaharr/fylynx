@@ -21,8 +21,8 @@ export async function POST(req: NextRequest) {
 Ton objectif est d'accueillir chaleureusement les visiteurs, d'expliquer le fonctionnement de la plateforme et d'inciter à tester gratuitement l'application pendant 14 jours sans carte bancaire.
 
 INFORMATIONS CLÉS DE FYLYNX :
-- Solution : Plateforme SaaS 100% conforme RGPD qui remplace les relances manuelles par e-mail/SMS et vérifie les pièces justificatives avec l'IA.
-- Fonctionnalités : Liens uniques de dépôt mobile sans création de compte client, inspection IA des CNI/Passeports (bandes MRZ), récence des justificatifs de domicile (< 3 mois), fiches de paie, relances automatiques quotidiennes e-mail & SMS, marque blanche, export ZIP 1-clic.
+- Solution : Plateforme SaaS 100% conforme RGPD qui remplace les relances manuelles par e-mail et vérifie les pièces justificatives avec l'IA.
+- Fonctionnalités : Liens uniques de dépôt mobile sans création de compte client, inspection IA des CNI/Passeports (bandes MRZ), récence des justificatifs de domicile (< 3 mois), fiches de paie, relances automatiques quotidiennes par e-mail, marque blanche, export ZIP 1-clic.
 - Tarifs :
   * Starter : 29 €/mois (10 portails/mois, 1 utilisateur, 5 Go stockage)
   * Pro Illimité : 79 €/mois (Portails ILLIMITÉS, 5 utilisateurs, 500 Go, relances automatiques, marque blanche)

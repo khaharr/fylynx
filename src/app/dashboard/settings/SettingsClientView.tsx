@@ -26,6 +26,8 @@ import {
   Link as LinkIcon,
   Users,
   UserPlus,
+  Rocket,
+  ArrowRight,
 } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
@@ -51,6 +53,8 @@ export default function SettingsClientView({
     companyLogo?: string | null;
     customWelcomeMsg?: string | null;
     brandColor?: string | null;
+    isTrialActive?: boolean;
+    trialDaysLeft?: number;
   };
 }) {
   const searchParams = useSearchParams();
@@ -398,9 +402,9 @@ export default function SettingsClientView({
 
               <button
                 onClick={() => handleSubscribe('PRO')}
-                className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black rounded-xl transition shrink-0 shadow-lg"
+                className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black rounded-xl transition shrink-0 shadow-lg inline-flex items-center gap-1.5"
               >
-                Passer à Pro (79 €/mois) →
+                Passer à Pro (79 €/mois) <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
           ) : (
@@ -503,8 +507,8 @@ export default function SettingsClientView({
                   <Palette className="h-5 w-5 text-brand-400" /> Personnalisation & Marque Blanche
                 </h2>
                 {canUseBranding ? (
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-extrabold">
-                    ✓ Débloqué (Pro & Enterprise)
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-extrabold flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Débloqué (Pro & Enterprise)
                   </span>
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-bold flex items-center gap-1">
@@ -623,7 +627,7 @@ export default function SettingsClientView({
                           <div className="truncate">
                             <span className="text-xs font-bold text-slate-100 block truncate">Logo configuré</span>
                             <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
-                              ✓ Logo d&apos;entreprise actif &amp; certifié (Google Drive)
+                              <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" /> Logo d&apos;entreprise actif &amp; certifié (Google Drive)
                             </span>
                           </div>
                         </div>
@@ -902,8 +906,8 @@ export default function SettingsClientView({
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Starter</span>
-                  <span className="px-2.5 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 text-xs font-bold rounded-full">
-                    🚀 14j d&apos;essai gratuit
+                  <span className="px-2.5 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 text-xs font-bold rounded-full flex items-center gap-1">
+                    <Rocket className="h-3 w-3 text-amber-400" /> 14j d&apos;essai gratuit
                   </span>
                 </div>
 
@@ -930,15 +934,22 @@ export default function SettingsClientView({
               </div>
 
               <button
+                type="button"
                 onClick={() => handleSubscribe('STARTER')}
-                disabled={isLoading || currentPlan === 'STARTER'}
-                className={`w-full py-3 rounded-2xl text-xs font-bold transition ${
-                  currentPlan === 'STARTER'
+                disabled={isLoading || (currentPlan === 'STARTER' && !user.isTrialActive)}
+                className={`w-full py-3 rounded-2xl text-xs font-extrabold transition ${
+                  currentPlan === 'STARTER' && !user.isTrialActive
                     ? 'bg-slate-800/80 text-slate-400 cursor-default border border-slate-700'
+                    : currentPlan === 'STARTER' && user.isTrialActive
+                    ? 'bg-gradient-to-r from-amber-500 via-brand-600 to-indigo-600 hover:brightness-110 text-white shadow-xl shadow-amber-500/20 glow-brand'
                     : 'bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-500/20'
                 }`}
               >
-                {currentPlan === 'STARTER' ? 'Essai Starter Actif (14j)' : `Sélectionner Starter (${isAnnual ? `${PLANS.STARTER.priceAnnualMonthly} €/mois` : `${PLANS.STARTER.priceMonthly} €/mois`})`}
+                {currentPlan === 'STARTER' && !user.isTrialActive
+                  ? 'Abonnement Starter Actif (Payé)'
+                  : currentPlan === 'STARTER' && user.isTrialActive
+                  ? `Activer l'Abonnement Starter (${isAnnual ? `${PLANS.STARTER.priceAnnualMonthly} €/mois` : `${PLANS.STARTER.priceMonthly} €/mois`})`
+                  : `Sélectionner Starter (${isAnnual ? `${PLANS.STARTER.priceAnnualMonthly} €/mois` : `${PLANS.STARTER.priceMonthly} €/mois`})`}
               </button>
             </div>
 
@@ -1055,7 +1066,7 @@ export default function SettingsClientView({
               }`}
             >
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3.5 py-1 bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 text-slate-950 text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg whitespace-nowrap animate-pulse">
-                🏆 OFFRE ULTIME & INTÉGRATIONS
+                 OFFRE ULTIME & INTÉGRATIONS
               </div>
 
               <div>
@@ -1126,6 +1137,13 @@ export default function SettingsClientView({
             </p>
           </div>
         </div>
+
+        <footer className="mt-12 pt-6 border-t border-slate-800/80 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3 font-medium px-2">
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="h-4 w-4 text-brand-400" /> Fylynx — Espace Professionnel Sécurisé
+          </span>
+          <span>© 2026 Tous droits réservés</span>
+        </footer>
       </main>
     </div>
   );

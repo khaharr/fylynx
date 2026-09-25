@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { AuthProvider } from '@/context/AuthContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 import LiveChatWidget from '@/components/LiveChatWidget';
 import './globals.css';
 
@@ -7,7 +8,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://fylynx.com'),
   title: 'Fylynx | Collecte & Vérification Automatisée de Pièces Justificatives B2B',
   description:
-    'Fini les relances manuelles et les emails chaotiques. Envoyez un lien unique de dépôt sécurisé à vos clients, relancez automatiquement par email/SMS et certifiez les dossiers avec l\'IA Vision Fylynx.',
+    'Fini les relances manuelles et les emails chaotiques. Envoyez un lien unique de dépôt sécurisé à vos clients, relancez automatiquement par e-mail et certifiez les dossiers avec l\'IA Vision Fylynx.',
   keywords: [
     'collecte de pièces justificatives',
     'vérification de documents IA',
@@ -18,7 +19,16 @@ export const metadata: Metadata = {
     'Fylynx SaaS',
   ],
   alternates: {
-    canonical: 'https://fylynx.com',
+    canonical: 'https://fylynx.com/fr',
+    languages: {
+      'x-default': 'https://fylynx.com/fr',
+      'fr': 'https://fylynx.com/fr',
+      'en': 'https://fylynx.com/en',
+      'ar': 'https://fylynx.com/ar',
+      'de': 'https://fylynx.com/de',
+      'es': 'https://fylynx.com/es',
+      'zh': 'https://fylynx.com/zh',
+    },
   },
   icons: {
     icon: '/fylynx-logo.png',
@@ -27,7 +37,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'Fylynx - Plateforme SaaS de Collecte Documentaire B2B',
-    description: 'Relances automatiques quotidiennes e-mail & SMS + vérification IA instantanée des CNI, passeports et justificatifs.',
+    description: 'Relances automatiques quotidiennes par e-mail + vérification IA instantanée des CNI, passeports et justificatifs.',
     url: 'https://fylynx.com',
     siteName: 'Fylynx',
     images: [
@@ -39,11 +49,13 @@ export const metadata: Metadata = {
       },
     ],
     type: 'website',
+    locale: 'fr_FR',
+    alternateLocale: ['en_US', 'ar_SA', 'de_DE', 'es_ES', 'zh_CN'],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Fylynx | Collecte Documentaire Automatisée & IA',
-    description: 'Relances automatiques quotidiennes e-mail & SMS + vérification IA instantanée.',
+    description: 'Relances automatiques quotidiennes par e-mail + vérification IA instantanée.',
     images: ['/fylynx-logo.png'],
   },
 };
@@ -82,7 +94,7 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="fr" className="h-full scroll-smooth">
+    <html lang="fr" className="min-h-screen scroll-smooth">
       <head>
         <link rel="icon" href="/fylynx-logo.png" type="image/png" sizes="any" />
         <link rel="apple-touch-icon" href="/fylynx-logo.png" />
@@ -101,11 +113,13 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
         />
       </head>
-      <body className="h-full bg-slate-950 text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white">
-        <AuthProvider>
-          {children}
-          <LiveChatWidget />
-        </AuthProvider>
+      <body className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white">
+        <LanguageProvider>
+          <AuthProvider>
+            {children}
+            <LiveChatWidget />
+          </AuthProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

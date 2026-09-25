@@ -4,6 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import CreateFolderModal from '@/components/CreateFolderModal';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import KpiStatsCards from '@/components/dashboard/KpiStatsCards';
+import OnboardingTour from '@/components/dashboard/OnboardingTour';
 import {
   Plus,
   Folder,
@@ -28,6 +31,7 @@ import {
   Mail,
   Calendar,
   FileSpreadsheet,
+  ArrowRight,
 } from 'lucide-react';
 
 interface FileItem {
@@ -244,9 +248,9 @@ export default function DashboardClientView({
             </div>
             <Link
               href="/admin"
-              className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-2xl text-xs font-extrabold shadow-lg shadow-purple-600/30 transition shrink-0 text-center"
+              className="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-2xl text-xs font-extrabold shadow-lg shadow-purple-600/30 transition shrink-0 text-center inline-flex items-center gap-1.5 justify-center"
             >
-              Accéder au HQ Admin →
+              Accéder au HQ Admin <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         )}
@@ -262,49 +266,20 @@ export default function DashboardClientView({
             </div>
             <Link
               href="/dashboard/settings"
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-2xl font-extrabold shrink-0 text-center transition shadow-md shadow-amber-500/20"
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-2xl font-extrabold shrink-0 text-center transition shadow-md shadow-amber-500/20 inline-flex items-center gap-1.5 justify-center"
             >
-              Passer au Forfait Pro (79€/mois) →
+              Passer au Forfait Pro (79€/mois) <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
         )}
 
         {/* Top Header & Welcome Banner */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-slate-900/90 p-5 sm:p-8 rounded-3xl border border-slate-800/80 shadow-2xl backdrop-blur-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500/10 rounded-full blur-[120px] pointer-events-none" />
-
-          <div className="space-y-2 relative z-10">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                Tableau de Bord Dossiers
-              </h1>
-              <span className="px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 text-xs font-bold border border-brand-500/40 shadow-sm flex items-center gap-1.5">
-                <Sparkle className="h-3.5 w-3.5 text-brand-400 fill-brand-400" /> Espace Professionnel
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
-              Bienvenue <strong className="text-white">{userName}</strong>. Générez vos liens de dépôt 1-clic et suivez l&apos;avancement de vos pièces justificatives.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 relative z-10">
-            <button
-              onClick={triggerManualCronRemind}
-              disabled={isRemindingAll}
-              className="px-4 py-3 bg-slate-800/90 hover:bg-slate-700 text-slate-200 rounded-2xl text-xs font-extrabold flex items-center justify-center gap-2 transition border border-slate-700 shadow-md"
-            >
-              <BellRing className={`h-4 w-4 ${isRemindingAll ? 'animate-bounce text-amber-400' : 'text-slate-400'}`} />
-              {isRemindingAll ? 'Relances en cours...' : 'Relancer Incomplets'}
-            </button>
-
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-5 py-3 bg-gradient-to-r from-brand-600 via-brand-500 to-indigo-600 hover:brightness-110 text-white font-extrabold rounded-2xl text-xs shadow-xl shadow-brand-500/25 flex items-center justify-center gap-2 transition glow-brand"
-            >
-              <Plus className="h-4 w-4" /> + Nouveau Dossier Client (1-Clic)
-            </button>
-          </div>
-        </div>
+        <DashboardHeader
+          userName={userName}
+          isRemindingAll={isRemindingAll}
+          onTriggerCronRemind={triggerManualCronRemind}
+          onOpenModal={() => setIsModalOpen(true)}
+        />
 
         {cronNotice && (
           <div className="p-4 bg-emerald-950/80 border border-emerald-500/40 rounded-2xl text-emerald-200 text-xs font-bold flex items-center gap-2.5 shadow-lg backdrop-blur-md animate-in fade-in duration-200">
@@ -314,79 +289,14 @@ export default function DashboardClientView({
         )}
 
         {/* High-Tech Interactive KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div
-            onClick={() => setActiveTab('ALL')}
-            className={`p-4 sm:p-5 rounded-3xl border shadow-xl flex items-center justify-between transition-all cursor-pointer ${
-              activeTab === 'ALL'
-                ? 'bg-slate-900 border-brand-500/80 ring-2 ring-brand-500/20 shadow-brand-500/10'
-                : 'bg-slate-900/80 border-slate-800 hover:border-slate-700'
-            }`}
-          >
-            <div>
-              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-slate-400">Total Dossiers</span>
-              <p className="text-2xl sm:text-3xl font-black text-white mt-0.5 sm:mt-1">{totalCount}</p>
-              <span className="text-[9px] sm:text-[10px] font-semibold text-slate-500 hidden sm:block mt-0.5">Tous les dossiers gérés</span>
-            </div>
-            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-brand-500/10 text-brand-400 flex items-center justify-center font-bold border border-brand-500/20 shadow-inner shrink-0">
-              <Folder className="h-5 w-5 sm:h-6 sm:w-6" />
-            </div>
-          </div>
-
-          <div
-            onClick={() => setActiveTab('PENDING')}
-            className={`p-4 sm:p-5 rounded-3xl border shadow-xl flex items-center justify-between transition-all cursor-pointer ${
-              activeTab === 'PENDING'
-                ? 'bg-slate-900 border-amber-500/80 ring-2 ring-amber-500/20 shadow-amber-500/10'
-                : 'bg-slate-900/80 border-amber-500/30 hover:border-amber-500/60'
-            }`}
-          >
-            <div>
-              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-amber-400">Incomplets</span>
-              <p className="text-2xl sm:text-3xl font-black text-amber-400 mt-0.5 sm:mt-1">{pendingCount}</p>
-              <span className="text-[9px] sm:text-[10px] font-semibold text-amber-300/70 hidden sm:block mt-0.5">Pièces manquantes</span>
-            </div>
-            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-amber-950/60 text-amber-400 flex items-center justify-center font-bold border border-amber-800/60 shadow-inner shrink-0">
-              <Clock className="h-5 w-5 sm:h-6 sm:w-6" />
-            </div>
-          </div>
-
-          <div
-            onClick={() => setActiveTab('IN_REVIEW')}
-            className={`p-4 sm:p-5 rounded-3xl border shadow-xl flex items-center justify-between transition-all cursor-pointer ${
-              activeTab === 'IN_REVIEW'
-                ? 'bg-slate-900 border-indigo-500/80 ring-2 ring-indigo-500/20 shadow-indigo-500/10'
-                : 'bg-slate-900/80 border-indigo-500/30 hover:border-indigo-500/60'
-            }`}
-          >
-            <div>
-              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-indigo-300">À Inspecter</span>
-              <p className="text-2xl sm:text-3xl font-black text-indigo-400 mt-0.5 sm:mt-1">{inReviewCount}</p>
-              <span className="text-[9px] sm:text-[10px] font-semibold text-indigo-300/70 hidden sm:block mt-0.5">Fichiers reçus</span>
-            </div>
-            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-indigo-950/60 text-indigo-400 flex items-center justify-center font-bold border border-indigo-800/60 shadow-inner shrink-0">
-              <RefreshCw className="h-5 w-5 sm:h-6 sm:w-6 animate-spin-slow" />
-            </div>
-          </div>
-
-          <div
-            onClick={() => setActiveTab('COMPLETED')}
-            className={`p-4 sm:p-5 rounded-3xl border shadow-xl flex items-center justify-between transition-all cursor-pointer ${
-              activeTab === 'COMPLETED'
-                ? 'bg-slate-900 border-emerald-500/80 ring-2 ring-emerald-500/20 shadow-emerald-500/10'
-                : 'bg-slate-900/80 border-emerald-500/30 hover:border-emerald-500/60'
-            }`}
-          >
-            <div>
-              <span className="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-emerald-400">Complets</span>
-              <p className="text-2xl sm:text-3xl font-black text-emerald-400 mt-0.5 sm:mt-1">{completedCount}</p>
-              <span className="text-[9px] sm:text-[10px] font-semibold text-emerald-300/70 hidden sm:block mt-0.5">Dossiers 100% validés</span>
-            </div>
-            <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-2xl bg-emerald-950/60 text-emerald-400 flex items-center justify-center font-bold border border-emerald-800/60 shadow-inner shrink-0">
-              <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />
-            </div>
-          </div>
-        </div>
+        <KpiStatsCards
+          totalCount={totalCount}
+          pendingCount={pendingCount}
+          inReviewCount={inReviewCount}
+          completedCount={completedCount}
+          activeTab={activeTab}
+          onSelectTab={setActiveTab}
+        />
 
         {/* Filter Tabs, View Switcher & Search Bar */}
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 bg-slate-900/90 p-4 rounded-3xl border border-slate-800 shadow-xl">
@@ -998,6 +908,16 @@ export default function DashboardClientView({
           }}
           templates={templates}
         />
+
+        {/* Interactive Guided Onboarding Tour */}
+        <OnboardingTour onOpenCreateModal={() => setIsModalOpen(true)} />
+
+        <footer className="mt-12 pt-6 border-t border-slate-800/80 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3 font-medium px-2">
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="h-4 w-4 text-brand-400" /> Fylynx — Espace Professionnel Sécurisé
+          </span>
+          <span>© 2026 Tous droits réservés</span>
+        </footer>
       </main>
     </div>
   );

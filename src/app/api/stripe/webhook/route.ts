@@ -44,6 +44,7 @@ export async function POST(req: Request) {
               stripeCustomerId: customerId,
               stripeSubscriptionId: subscriptionId,
               subscriptionStatus: plan,
+              trialEndsAt: null,
             },
           });
         }

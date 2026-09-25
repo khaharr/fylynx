@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Zap,
   Layers,
+  CheckCircle2,
 } from 'lucide-react';
 
 interface TemplateItem {
@@ -145,8 +146,8 @@ export default function CreateFolderModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto font-sans selection:bg-brand-500 selection:text-white">
-      <div className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 text-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-3 sm:p-4 overflow-y-auto font-sans selection:bg-brand-500 selection:text-white">
+      <div className="w-full max-w-xl max-h-[92vh] flex flex-col bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 text-slate-100">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/60">
           <div className="flex items-center gap-3">
@@ -273,7 +274,7 @@ export default function CreateFolderModal({
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <Zap className="h-3.5 w-3.5 text-amber-300" /> ⚡ Lien Rapide (1 Clic)
+                <Zap className="h-3.5 w-3.5 text-amber-300 fill-amber-300" /> Lien Rapide (1 Clic)
               </button>
 
               <button
@@ -421,7 +422,15 @@ export default function CreateFolderModal({
                     }`}
                   >
                     <Layers className="h-3.5 w-3.5 text-emerald-400" />
-                    {isRectoVerso ? '✓ Format Recto + Verso Exigé' : '+ Option Recto / Verso'}
+                    {isRectoVerso ? (
+                      <span className="flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-400" /> Format Recto + Verso Exigé
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <Plus className="h-3 w-3" /> Option Recto / Verso
+                      </span>
+                    )}
                   </button>
 
                   {/* Quantity Selector */}

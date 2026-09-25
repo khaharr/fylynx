@@ -2,53 +2,49 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Calculator, TrendingUp, Clock, Euro, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Calculator, TrendingUp, Clock, Euro, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function RoiCalculator() {
+  const { t } = useLanguage();
   const [requestsPerMonth, setRequestsPerMonth] = useState<number>(45);
   const [hourlyRate, setHourlyRate] = useState<number>(40);
 
   // Math calculations
-  // Average manual processing & follow-up time per file: 45 minutes = 0.75 hours
   const hoursPerRequest = 0.75;
   const totalHoursSpent = Math.round(requestsPerMonth * hoursPerRequest);
-  // Fylynx reduces processing & follow-up time by 90%
   const hoursSavedPerMonth = Math.round(totalHoursSpent * 0.9);
   const moneySavedPerMonth = Math.round(hoursSavedPerMonth * hourlyRate);
   const moneySavedPerYear = moneySavedPerMonth * 12;
 
-  // Pro plan cost = 79€/month
   const fylynxPlanCost = 79;
   const netMonthlyGain = moneySavedPerMonth - fylynxPlanCost;
   const roiMultiplier = Math.max(1, Math.round((moneySavedPerMonth / fylynxPlanCost) * 10) / 10);
 
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto relative">
-      {/* Radial Ambient Glow background */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-600/10 rounded-full blur-[140px] pointer-events-none -z-10" />
 
       <div className="text-center max-w-3xl mx-auto mb-14">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-4">
           <Calculator className="h-4 w-4 text-emerald-400" />
-          <span>Calculateur de ROI & Économies</span>
+          <span>{t('roi_badge')}</span>
         </div>
         <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-          Combien d'heures et d'argent allez-vous économiser ?
+          {t('roi_title')}
         </h2>
         <p className="mt-4 text-base text-slate-400 leading-relaxed">
-          Simulez en direct le gain de temps et les bénéfices financiers réalisés par votre équipe grâce aux relances automatiques et à l'inspection par IA Fylynx.
+          {t('roi_desc')}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-slate-900/60 border border-slate-800 backdrop-blur-2xl rounded-3xl p-6 sm:p-10 shadow-2xl">
-        {/* Left Column: Sliders & Controls */}
-        <div className="lg:col-span-7 space-y-8">
-          {/* Slider 1: Requests per month */}
-          <div className="bg-slate-950/80 border border-slate-800 p-6 rounded-2xl">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-slate-900/60 border border-slate-800 backdrop-blur-2xl rounded-3xl p-4 sm:p-8 lg:p-10 shadow-2xl">
+        <div className="lg:col-span-7 space-y-6 sm:space-y-8">
+          <div className="bg-slate-950/80 border border-slate-800 p-4 sm:p-6 rounded-2xl">
             <div className="flex justify-between items-center mb-3">
               <label htmlFor="requests-slider" className="text-sm font-bold text-slate-200 flex items-center gap-2">
                 <Clock className="h-4 w-4 text-brand-400" />
-                Dossiers clients à collecter / mois
+                {t('roi_slider_docs')}
               </label>
               <span className="px-3 py-1 rounded-xl bg-brand-500/20 text-brand-300 border border-brand-500/30 font-black text-sm">
                 {requestsPerMonth} dossiers
@@ -71,12 +67,11 @@ export default function RoiCalculator() {
             </div>
           </div>
 
-          {/* Slider 2: Team Hourly Rate */}
           <div className="bg-slate-950/80 border border-slate-800 p-6 rounded-2xl">
             <div className="flex justify-between items-center mb-3">
               <label htmlFor="rate-slider" className="text-sm font-bold text-slate-200 flex items-center gap-2">
                 <Euro className="h-4 w-4 text-emerald-400" />
-                Coût horaire moyen de votre collaborateur
+                {t('roi_slider_rate')}
               </label>
               <span className="px-3 py-1 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-black text-sm">
                 {hourlyRate} € / heure
@@ -99,7 +94,6 @@ export default function RoiCalculator() {
             </div>
           </div>
 
-          {/* Quick Value Props */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
             <div className="flex items-center gap-2.5 text-xs text-slate-300 font-medium bg-slate-950/40 border border-slate-800/60 p-3 rounded-xl">
               <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
@@ -112,7 +106,6 @@ export default function RoiCalculator() {
           </div>
         </div>
 
-        {/* Right Column: ROI Output Card */}
         <div className="lg:col-span-5 bg-gradient-to-br from-slate-950 via-slate-900 to-brand-950/40 border border-brand-500/30 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl flex flex-col justify-between h-full">
           <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -128,7 +121,7 @@ export default function RoiCalculator() {
 
             <div className="space-y-6">
               <div>
-                <div className="text-xs text-slate-400 font-semibold mb-1">Temps économisé par mois</div>
+                <div className="text-xs text-slate-400 font-semibold mb-1">{t('roi_gain_hours')}</div>
                 <div className="text-4xl font-black text-white flex items-baseline gap-2">
                   <span>{hoursSavedPerMonth} heures</span>
                   <span className="text-xs font-bold text-slate-400">/ mois</span>
@@ -136,12 +129,12 @@ export default function RoiCalculator() {
               </div>
 
               <div>
-                <div className="text-xs text-slate-400 font-semibold mb-1">Gain financier mensuel net</div>
+                <div className="text-xs text-slate-400 font-semibold mb-1">{t('roi_gain_money')}</div>
                 <div className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-300 to-indigo-300">
                   +{netMonthlyGain > 0 ? netMonthlyGain.toLocaleString('fr-FR') : 0} €
                 </div>
                 <div className="text-[11px] text-emerald-400 font-semibold mt-1">
-                  soit {moneySavedPerYear.toLocaleString('fr-FR')} € / an économisés
+                  soit {moneySavedPerYear.toLocaleString('fr-FR')} € {t('roi_gain_yearly')}
                 </div>
               </div>
             </div>
@@ -152,11 +145,11 @@ export default function RoiCalculator() {
               href="/register"
               className="w-full py-3.5 px-6 bg-gradient-to-r from-brand-600 via-indigo-600 to-cyan-500 hover:brightness-110 text-white font-extrabold text-sm rounded-2xl shadow-lg glow-brand transition flex items-center justify-center gap-2 group"
             >
-              <span>Économisez {netMonthlyGain > 0 ? netMonthlyGain.toLocaleString('fr-FR') : 0} € dès maintenant</span>
+              <span>{t('roi_cta')}</span>
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <p className="text-center text-[11px] text-slate-400 font-semibold mt-3">
-              14 jours d'essai offerts • Sans carte bancaire • Configuration en 2 min
+              {t('trial_notice')}
             </p>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { stripe, PLANS } from '@/lib/stripe';
 import { db } from '@/lib/db';
+import { getCurrentUser } from '@/lib/auth';
 
 export async function POST(req: Request) {
   try {
@@ -16,9 +17,14 @@ export async function POST(req: Request) {
     const isAnnual = billingPeriod === 'annual';
     const priceId = isAnnual ? targetPlan.priceIdAnnual : targetPlan.priceIdMonthly;
 
-    const user = await db.user.findFirst({ where: { email: 'demo@fylinx.com' } });
+    const sessionUser = await getCurrentUser();
+    let user = sessionUser ? await db.user.findUnique({ where: { id: sessionUser.id } }) : null;
     if (!user) {
-      return NextResponse.json({ error: 'Utilisateur non identifié' }, { status: 401 });
+      user = await db.user.findFirst();
+    }
+
+    if (!user) {
+      return NextResponse.json({ error: 'Utilisateur non identifié. Veuillez vous connecter.' }, { status: 401 });
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -35,7 +41,7 @@ export async function POST(req: Request) {
           },
         ],
         mode: 'subscription',
-        success_url: `${appUrl}/dashboard/settings?session_id={CHECKOUT_SESSION_ID}&success=true`,
+        success_url: `${appUrl}/dashboard/settings?session_id={CHECKOUT_SESSION_ID}&success=true&plan=${plan || 'STARTER'}`,
         cancel_url: `${appUrl}/dashboard/settings?canceled=true`,
         metadata: {
           userId: user.id,
@@ -47,10 +53,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ url: session.url });
     }
 
-    // Mock upgrade for testing when Stripe API key is not configured
+    // Mock upgrade/subscription activation for testing when Stripe API key is not configured
     await db.user.update({
       where: { id: user.id },
-      data: { subscriptionStatus: plan || 'STARTER' },
+      data: {
+        subscriptionStatus: plan || 'STARTER',
+        trialEndsAt: null,
+        stripeSubscriptionId: user.stripeSubscriptionId || 'sub_active_starter',
+      },
     });
 
     return NextResponse.json({

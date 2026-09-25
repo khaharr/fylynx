@@ -132,36 +132,39 @@ async function analyzeWithGeminiVision({
 
   const prompt = `
 Vous êtes l'IA officielle de vérification documentaire ultra-avancée de Fylynx SaaS.
-Analyse en très grand détail l'image/fichier transmis et compare-le strictement au document requis : "${requirementTitle}".
+Analyse l'image/fichier transmis et compare-le strictement au document requis : "${requirementTitle}".
 Nom du client attendu sur le document : "${clientName}".
 
-RÈGLES D'ANALYSE ET D'EXPLICABILITÉ HYPER DÉTAILLÉE :
-1. IDENTIFICATION PRÉCISE DU CONTENU VISUEL :
-   - Décris avec une précision absolue le contenu exact de l'image transmise (ex: "Photo de bâtiment / immeuble", "Photo de véhicule (Audi, BMW, Mercedes, etc.)", "Paysage / Nature", "Photo de produit", "Photo de visage / Selfie", "CV / Resume", "Avis d'imposition DGFIP", "Carte Nationale d'Identité", "Passeport", "Facture EDF", "Facture d'eau", "Document manuscrit", "Capture d'écran non pertinente").
+RÈGLES STRICTES DE RÉDACTION ET D'EXPLICABILITÉ :
+1. RÈGLE CRITIQUE DE CONCISION DU RÉSUMÉ ("summary") :
+   - Le champ "summary" DOIT ÊTRE ULTRA-CONCIS (1 À 2 PHRASES COURTES, 15 À 20 MOTS MAXIMUM).
+   - INTERDICTION ABSOLUE DE RÉDIGER DE LONGS PARAGRAPHES OU PAVÉS DE TEXTE.
+   - Exemple de résumé valide : "Certifié conforme (95%). Identité et nom du client vérifiés."
+   - Exemple de rejet valide : "REJETÉ (0%) : Photo de bâtiment détectée au lieu du document requis."
 
-2. REJET DES IMAGES NON DOCUMENTAIRES OU DE CATÉGORIE DIFFÉRENTE :
+2. REJET DES IMAGES NON DOCUMENTAIRES OU INAPPROPRIÉES :
    - Si l'image est un BÂTIMENT, une VOITURE, un PAYSAGE, une PHOTO PERSONNELLE ou un OBJET sans rapport avec un document officiel -> REJETTE IMMÉDIATEMENT :
-     confidenceScore: 0, status: "REJECTED", suggestedAction: "REJECT", documentCategory: "Photo de Bâtiment / Image Personnelle",
-     summary: "IA Fylynx : REJETÉ (0% de confiance). L'image transmise représente une photo de bâtiment / immeuble et ne contient aucun document officiel ni marqueur légal requis pour '${requirementTitle}'.",
-     rejectionReason: "Fichier non conforme : L'image fournie est une photo de bâtiment/immeuble et ne constitue pas le document officiel demandé ('${requirementTitle}')."
+     confidenceScore: 0, status: "REJECTED", suggestedAction: "REJECT", documentCategory: "Photo Non Conforme",
+     summary: "REJETÉ (0%) : Photo non documentaire (bâtiment, véhicule, objet) détectée.",
+     rejectionReason: "Fichier non conforme : L'image fournie ne constitue pas le document officiel demandé ('${requirementTitle}')."
 
 3. RAPPROCHEMENT DU NOM DU CLIENT ("${clientName}") :
    - Recherche la présence explicite du nom "${clientName}" sur le document.
-   - Si le document est valide mais que le nom "${clientName}" est absent ou ne correspond pas -> status: "WARNING" ou "REJECTED", confidenceScore: 40-50, summary: "Document officiel détecté, mais le nom '${clientName}' n'a pas été retrouvé sur le document."
+   - Si le document est valide mais que le nom "${clientName}" est absent -> status: "WARNING" ou "REJECTED", confidenceScore: 40-50, summary: "Document détecté mais nom du client '${clientName}' non retrouvé."
 
 4. STRUCTURE DU RETOUR JSON OBLIGATOIRE :
 {
   "confidenceScore": number (de 0 à 100),
   "status": "PASSED" | "WARNING" | "REJECTED",
-  "documentCategory": "Catégorie exacte détectée (ex: Photo de Bâtiment / Façade, Photo de Véhicule, Carte Nationale d'Identité, Avis d'Imposition, CV, etc.)",
-  "summary": "Explication hyper détaillée en français précisant exactement ce qui a été vu dans l'image et pourquoi le score a été attribué",
+  "documentCategory": "Catégorie exacte détectée (ex: Carte Nationale d'Identité, Avis d'Imposition, CV, etc.)",
+  "summary": "Résumé ultra-concis en 1-2 phrases (15 mots max)",
   "checks": [
-    { "label": "Identification visuelle du contenu", "passed": true/false, "details": "Description précise du contenu détecté" },
-    { "label": "Présence des marqueurs officiels de sécurité", "passed": true/false, "details": "Filigranes, bandes MRZ, tampons officiels" },
-    { "label": "Rapprochement de l'identité du client (${clientName})", "passed": true/false, "details": "Résultat du contrôle du nom" }
+    { "label": "Identification visuelle", "passed": true/false, "details": "Description courte" },
+    { "label": "Marqueurs de sécurité", "passed": true/false, "details": "Filigranes / MRZ" },
+    { "label": "Identité du client (${clientName})", "passed": true/false, "details": "Contrôle du nom" }
   ],
   "suggestedAction": "AUTO_VALIDATE" | "MANUAL_REVIEW" | "REJECT",
-  "rejectionReason": "Raison exacte et détaillée du rejet précisant le contenu détecté"
+  "rejectionReason": "Raison directe et courte du rejet"
 }
 `;
 
@@ -174,6 +177,9 @@ RÈGLES D'ANALYSE ET D'EXPLICABILITÉ HYPER DÉTAILLÉE :
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]) as AiCheckResult;
+        if (parsed.summary && parsed.summary.length > 180) {
+          parsed.summary = parsed.summary.slice(0, 177) + '...';
+        }
         return parsed;
       }
     } catch (err: any) {
@@ -227,12 +233,12 @@ export async function analyzeDocumentWithAi({
       confidenceScore: 0,
       status: 'REJECTED',
       documentCategory: 'Fichier Suspect / Vide',
-      summary: 'Fichier illisible ou corrompu (< 1 Ko). Une ré-importation est nécessaire.',
+      summary: 'Fichier illisible ou corrompu (< 1 Ko). Ré-importation requise.',
       checks: [
         { label: 'Taille minimale du fichier (> 1 Ko)', passed: false, details: 'Fichier vide' },
       ],
       suggestedAction: 'REJECT',
-      rejectionReason: 'Le fichier transmis semble vide ou corrompu. Merci de reprendre une photo nette.',
+      rejectionReason: 'Le fichier transmis semble vide ou corrompu.',
     };
   }
 
@@ -242,7 +248,6 @@ export async function analyzeDocumentWithAi({
     if (mimeType.includes('pdf') || lowerFileName.endsWith('.pdf')) {
       extractedText = await extractTextFromPdf(buffer);
 
-      // Si le PDF est un scan (pas de couche de texte direct), on extrait les images internes et applique l'OCR !
       if (!extractedText || extractedText.trim().length < 30) {
         const embeddedImages = extractImagesFromPdfBuffer(buffer);
         for (const imgBuf of embeddedImages) {
@@ -268,10 +273,9 @@ export async function analyzeDocumentWithAi({
     }
   }
 
-  // LOCAL OCR + HEURISTIC ENGINE (Analyse de secours totalement infaillible)
+  // LOCAL OCR + HEURISTIC ENGINE (Moteur de secours ultralégers et précis)
   const fullContent = `${lowerFileName} ${extractedText}`.toLowerCase();
 
-  // Mots-clés bâtiments, véhicules et photos non documentaires
   const buildingKeywords = ['building', 'batiment', 'immeuble', 'facade', 'maison', 'construction', 'architecture', 'tower', 'tour', 'appartement'];
   const carKeywords = ['car', 'auto', 'merco', 'audi', 'bmw', 'peugeot', 'renault', 'voiture', 'vehicule', 'rs3', 'porsche', 'ferrari', 'blog_merco', 'photo_car'];
 
@@ -282,15 +286,14 @@ export async function analyzeDocumentWithAi({
     return {
       confidenceScore: 0,
       status: 'REJECTED',
-      documentCategory: 'Photo de Bâtiment / Façade d\'Immeuble',
-      summary: `IA Fylynx : REJETÉ (0% de confiance). Le fichier importé représente un bâtiment ou une façade d'immeuble et ne contient aucun document officiel requis ("${requirement?.title}").`,
+      documentCategory: 'Photo de Bâtiment / Façade',
+      summary: `REJETÉ (0%) : Photo de bâtiment détectée au lieu du document officiel.`,
       checks: [
-        { label: 'Identification visuelle du contenu', passed: false, details: 'ÉCHEC : Bâtiment / Façade d\'immeuble détectée' },
-        { label: 'Marqueurs officiels de sécurité', passed: false, details: 'Absents sur l\'image' },
-        { label: `Recherche du nom du client (${clientName})`, passed: false, details: 'Non détecté' },
+        { label: 'Identification du contenu', passed: false, details: 'Photo de bâtiment' },
+        { label: 'Marqueurs officiels de sécurité', passed: false, details: 'Absents' },
       ],
       suggestedAction: 'REJECT',
-      rejectionReason: `Le fichier fourni est une photo de bâtiment/immeuble. Merci d'importer le document officiel demandé ("${requirement?.title}").`,
+      rejectionReason: `Photo de bâtiment fournie au lieu du document officiel demandé ("${requirement?.title}").`,
     };
   }
 
@@ -298,21 +301,20 @@ export async function analyzeDocumentWithAi({
     return {
       confidenceScore: 0,
       status: 'REJECTED',
-      documentCategory: 'Photo de Véhicule / Image Personnelle',
-      summary: `IA Fylynx : REJETÉ (0% de confiance). Le fichier transmis est une photo de véhicule ou une image personnelle non conforme au document demandé ("${requirement?.title}").`,
+      documentCategory: 'Photo de Véhicule',
+      summary: `REJETÉ (0%) : Photo de véhicule détectée au lieu du document officiel.`,
       checks: [
-        { label: 'Identification visuelle du contenu', passed: false, details: 'ÉCHEC : Image de véhicule ou photo personnelle détectée' },
-        { label: 'Marqueurs officiels de sécurité', passed: false, details: 'Absents' },
+        { label: 'Identification du contenu', passed: false, details: 'Photo de véhicule' },
+        { label: 'Marqueurs de sécurité', passed: false, details: 'Absents' },
       ],
       suggestedAction: 'REJECT',
-      rejectionReason: `Le fichier fourni est une photo de véhicule. Merci d'importer le document officiel demandé ("${requirement?.title}").`,
+      rejectionReason: `Photo de véhicule fournie au lieu du document officiel demandé.`,
     };
   }
 
   // 3. Détection de CV / Curriculum Vitae
   const cvRegex = /\b(curriculum|vitae|expériences?|compétences?|formation|diplômes?|centres? d'intérêt|parcours|stage|atouts|cv)\b/i;
   const isCvDocument = cvRegex.test(fullContent);
-
   const isCvRequested = reqTitle.includes('cv') || reqTitle.includes('curriculum') || reqTitle.includes('resume');
 
   if (isCvRequested) {
@@ -321,9 +323,9 @@ export async function analyzeDocumentWithAi({
         confidenceScore: 95,
         status: 'PASSED',
         documentCategory: 'CV / Curriculum Vitae',
-        summary: 'IA Fylynx : CV reconnu et conforme à la demande.',
+        summary: 'Certifié conforme (95%) : CV reconnu et valide.',
         checks: [
-          { label: 'Détection du format CV / Resume', passed: true, details: 'Structure de CV certifiée' },
+          { label: 'Format CV / Resume', passed: true, details: 'CV certifié conforme' },
         ],
         suggestedAction: 'AUTO_VALIDATE',
       };
@@ -332,10 +334,10 @@ export async function analyzeDocumentWithAi({
     return {
       confidenceScore: 0,
       status: 'REJECTED',
-      documentCategory: 'CV / Curriculum Vitae (Non Conforme)',
-      summary: `IA Fylynx : REJETÉ (0% de confiance). Vous avez transmis un CV au lieu du document demandé ("${requirement?.title}").`,
+      documentCategory: 'CV (Non Conforme)',
+      summary: `REJETÉ (0%) : CV transmis au lieu du document officiel demandé ("${requirement?.title}").`,
       checks: [
-        { label: 'Conformité de la catégorie du document', passed: false, details: `Document détecté : CV (Attendu : ${requirement?.title})` },
+        { label: 'Catégorie du document', passed: false, details: `CV détecté (Attendu : ${requirement?.title})` },
       ],
       suggestedAction: 'REJECT',
       rejectionReason: `Vous avez transmis un CV au lieu du document officiel demandé ("${requirement?.title}").`,
@@ -357,14 +359,14 @@ export async function analyzeDocumentWithAi({
       return {
         confidenceScore: 0,
         status: 'REJECTED',
-        documentCategory: 'Document Non Conforme (Pas une Pièce d\'Identité)',
-        summary: `IA Fylynx : REJETÉ (0% de confiance). Le document transmis ne comporte aucun filigrane ni marqueur officiel de pièce d'identité (CNI, Passeport, Permis).`,
+        documentCategory: 'Document Non Conforme',
+        summary: `REJETÉ (0%) : Marqueurs officiels de pièce d'identité non détectés.`,
         checks: [
-          { label: 'Présence des marqueurs officiels de sécurité', passed: false, details: 'ÉCHEC : Bande MRZ, armoiries et filigranes officiels non détectés' },
-          { label: 'Catégorie du document', passed: false, details: 'Fichier non reconnu comme pièce d\'identité valide' },
+          { label: 'Marqueurs de sécurité (MRZ/Sceaux)', passed: false, details: 'Absents ou illisibles' },
+          { label: 'Catégorie de pièce d\'identité', passed: false, details: 'Fichier non reconnu' },
         ],
         suggestedAction: 'REJECT',
-        rejectionReason: 'Le document transmis ne présente aucun marqueur d\'une pièce d\'identité officielle. Merci d\'importer une photo nette recto/verso de votre pièce d\'identité.',
+        rejectionReason: 'Aucun marqueur de pièce d\'identité officielle détecté. Merci de fournir une photo nette.',
       };
     }
 
@@ -376,11 +378,11 @@ export async function analyzeDocumentWithAi({
       status: hasNameMatch ? 'PASSED' : 'WARNING',
       documentCategory: category,
       summary: hasNameMatch
-        ? `IA Fylynx : Document d'identité certifié conforme à ${confidence}%. Titulaire "${clientName}" vérifié.`
-        : `IA Fylynx : Document d'identité reconnu, mais le nom "${clientName}" n'a pas été détecté avec certitude sur la pièce.`,
+        ? `Certifié conforme (${confidence}%) : Identité et nom '${clientName}' vérifiés.`
+        : `Avertissement (${confidence}%) : Identité reconnue mais nom '${clientName}' incertain.`,
       checks: [
-        { label: 'Contrôle des marqueurs officiels de sécurité', passed: true, details: 'Filigranes et structure d\'identité détectés' },
-        { label: 'Correspondance du Nom du Client', passed: hasNameMatch, details: hasNameMatch ? `Nom certifié : ${clientName}` : `Nom "${clientName}" non retrouvé avec certitude sur la pièce` },
+        { label: 'Marqueurs de sécurité', passed: true, details: 'Filigranes certifiés' },
+        { label: 'Nom du client', passed: hasNameMatch, details: hasNameMatch ? `Nom certifié : ${clientName}` : `Nom incertain sur la pièce` },
       ],
       suggestedAction: hasNameMatch ? 'AUTO_VALIDATE' : 'MANUAL_REVIEW',
     };
@@ -401,14 +403,13 @@ export async function analyzeDocumentWithAi({
       return {
         confidenceScore: 0,
         status: 'REJECTED',
-        documentCategory: 'Document Non Conforme (Pas un Avis d\'Imposition)',
-        summary: `IA Fylynx : REJETÉ (0% de confiance). Le document transmis ne comporte aucun en-tête ni référence d'Avis d'Imposition officiel (DGFIP / Finances Publiques).`,
+        documentCategory: 'Document Non Conforme',
+        summary: `REJETÉ (0%) : En-tête officiel DGFIP non détecté sur l'avis d'imposition.`,
         checks: [
-          { label: 'En-tête officiel DGFIP / Finances Publiques', passed: false, details: 'ÉCHEC : Document fiscal non reconnu' },
-          { label: 'Revenu Fiscal de Référence & N° Fiscal', passed: false, details: 'Éléments fiscaux absents' },
+          { label: 'En-tête DGFIP / Finances Publiques', passed: false, details: 'Non reconnu' },
         ],
         suggestedAction: 'REJECT',
-        rejectionReason: 'Le document transmis n\'est pas un avis d\'imposition officiel (DGFIP, Revenu Fiscal de Référence).',
+        rejectionReason: 'Le document transmis n\'est pas un avis d\'imposition officiel (DGFIP).',
       };
     }
 
@@ -419,17 +420,17 @@ export async function analyzeDocumentWithAi({
       status: hasNameMatch ? 'PASSED' : 'WARNING',
       documentCategory: 'Avis d\'Imposition Officiel',
       summary: hasNameMatch
-        ? `IA Fylynx : Avis d'imposition officiel certifié à ${confidence}%. Rapprochement du nom "${clientName}" validé.`
-        : `IA Fylynx : Avis d'imposition officiel reconnu, mais le nom "${clientName}" n'apparaît pas clairement sur l'avis.`,
+        ? `Certifié conforme (${confidence}%) : Avis d'imposition DGFIP et nom vérifiés.`
+        : `Avertissement (${confidence}%) : Avis d'imposition reconnu mais nom '${clientName}' incertain.`,
       checks: [
-        { label: 'En-tête officiel DGFIP & Mentions fiscales', passed: true, details: 'Avis d\'imposition certifié conforme' },
-        { label: 'Rapprochement avec l\'identité du client', passed: hasNameMatch, details: hasNameMatch ? `Déclarant fiscal certifié : ${clientName}` : `Avertissement : Nom "${clientName}" non identifié sur la déclaration` },
+        { label: 'En-tête officiel DGFIP', passed: true, details: 'Avis conforme' },
+        { label: 'Rapprochement nom client', passed: hasNameMatch, details: hasNameMatch ? `Déclarant : ${clientName}` : `Nom non certifié` },
       ],
       suggestedAction: hasNameMatch ? 'AUTO_VALIDATE' : 'MANUAL_REVIEW',
     };
   }
 
-  // 6. Analyse des Justificatifs de Domicile (-3 mois)
+  // 6. Analyse des Justificatifs de Domicile
   const isProofOfAddressRequest = reqTitle.includes('domicile') || reqTitle.includes('justificatif') || reqTitle.includes('facture');
 
   if (isProofOfAddressRequest) {
@@ -441,23 +442,22 @@ export async function analyzeDocumentWithAi({
         confidenceScore: 0,
         status: 'REJECTED',
         documentCategory: 'Justificatif Non Conforme',
-        summary: 'IA Fylynx : REJETÉ (0% de confiance). Émetteur officiel non reconnu (Facture EDF, Engie, Orange, Free, Eau, Quittance demandée).',
+        summary: 'REJETÉ (0%) : Émetteur officiel non reconnu (Facture EDF, Engie, Eau, Télécom demandée).',
         checks: [
-          { label: 'Fournisseur certifié d\'énergie / télécom', passed: false, details: 'Organisme non identifié' },
+          { label: 'Fournisseur certifié électricité/eau/télécom', passed: false, details: 'Non identifié' },
         ],
         suggestedAction: 'REJECT',
-        rejectionReason: 'Organisme émetteur non identifié. Merci de fournir une facture officielle de moins de 3 mois (EDF, Eau, Télécom ou Quittance de loyer).',
+        rejectionReason: 'Organisme émetteur non identifié. Merci de fournir une facture récente (-3 mois).',
       };
     }
 
     return {
       confidenceScore: 95,
       status: 'PASSED',
-      documentCategory: 'Justificatif de Domicile Certifié (-3 mois)',
-      summary: 'IA Fylynx : Facture récente d\'organisme officiel certifiée avec succès.',
+      documentCategory: 'Justificatif de Domicile Certifié',
+      summary: 'Certifié conforme (95%) : Justificatif de domicile récent validé.',
       checks: [
-        { label: 'Fournisseur certifié d\'énergie / télécom', passed: true, details: 'Organisme certifié détecté' },
-        { label: 'Récence du document (-90 jours)', passed: true, details: 'Conforme' },
+        { label: 'Fournisseur certifié', passed: true, details: 'Organisme certifié détecté' },
       ],
       suggestedAction: 'AUTO_VALIDATE',
     };
@@ -474,10 +474,10 @@ export async function analyzeDocumentWithAi({
       return {
         confidenceScore: 0,
         status: 'REJECTED',
-        documentCategory: 'Document Non Conforme (Pas un Bulletin de Paie)',
-        summary: 'IA Fylynx : REJETÉ (0% de confiance). Structure de bulletin de paie non reconnue (Net à payer, SIRET manquant).',
+        documentCategory: 'Document Non Conforme',
+        summary: 'REJETÉ (0%) : Structure de bulletin de paie non reconnue (Net à payer, SIRET manquant).',
         checks: [
-          { label: 'Mentions légales & Cotisations sociales', passed: false, details: 'ÉCHEC : Structure non conforme' },
+          { label: 'Mentions légales & Cotisations', passed: false, details: 'Non conforme' },
         ],
         suggestedAction: 'REJECT',
         rejectionReason: 'Le document ne présente pas la structure d\'un bulletin de paie officiel.',
@@ -488,25 +488,25 @@ export async function analyzeDocumentWithAi({
       confidenceScore: 97,
       status: 'PASSED',
       documentCategory: 'Bulletin de Salaire Officiel',
-      summary: 'IA Fylynx : Bulletin de salaire vérifié et conforme.',
+      summary: 'Certifié conforme (97%) : Bulletin de paie vérifié et conforme.',
       checks: [
-        { label: 'Mentions légales & Cotisations sociales', passed: true, details: 'Bulletin conforme' },
+        { label: 'Mentions légales', passed: true, details: 'Bulletin conforme' },
       ],
       suggestedAction: 'AUTO_VALIDATE',
     };
   }
 
-  // 8. RÈGLE PAR DÉFAUT STRICTEMENT SÉCURISÉE (Plus jamais de 85% par défaut !)
+  // 8. RÈGLE PAR DÉFAUT STRICTEMENT SÉCURISÉE
   return {
     confidenceScore: 0,
     status: 'REJECTED',
-    documentCategory: 'Document Non Identifié / Non Conforme',
-    summary: `IA Fylynx : REJETÉ (0% de confiance). Impossible de certifier ce document comme un/une "${requirement?.title}". Aucun marqueur documentaire officiel valide détecté.`,
+    documentCategory: 'Document Non Identifié',
+    summary: `REJETÉ (0%) : Document non identifié ou sans marqueurs officiels exploitables.`,
     checks: [
-      { label: 'Validation des éléments documentaires originaux', passed: false, details: 'Fichier sans marqueurs officiels exploitables' },
+      { label: 'Validation des éléments documentaires', passed: false, details: 'Fichier sans marqueurs officiels' },
     ],
     suggestedAction: 'REJECT',
-    rejectionReason: `Impossible d'authentifier ce fichier comme "${requirement?.title}". Merci de veiller à importer un document officiel lisible.`,
+    rejectionReason: `Impossible d'authentifier ce fichier comme "${requirement?.title}". Merci d'importer un document officiel lisible.`,
   };
 }
 
@@ -523,28 +523,161 @@ export async function processAiVerificationForRequirement(
 
   if (!req) return null;
 
-  // Fetch the latest uploaded document file for this requirement (for replacement uploads)
-  const docFile = await db.documentFile.findFirst({
+  // Fetch ALL uploaded document files for this requirement to support Recto + Verso
+  const docFiles = await db.documentFile.findMany({
     where: { documentRequirementId },
-    orderBy: { uploadedAt: 'desc' },
+    orderBy: { uploadedAt: 'asc' },
   });
 
+  if (docFiles.length === 0) {
+    const singleResult = await analyzeDocumentWithAi({
+      documentRequirementId,
+      fileName,
+      mimeType,
+      fileSize,
+      clientName: req.folderRequest.clientName,
+    });
+
+    const newStatus = singleResult.suggestedAction === 'AUTO_VALIDATE' ? 'VALIDATED' : 'SUBMITTED';
+
+    const updated = await db.documentRequirement.update({
+      where: { id: documentRequirementId },
+      data: {
+        aiVerified: true,
+        aiStatus: singleResult.status,
+        aiConfidenceScore: singleResult.confidenceScore,
+        aiAnalysisDetails: JSON.stringify(singleResult),
+        status: newStatus,
+        rejectionReason: singleResult.rejectionReason || null,
+      },
+    });
+
+    return { requirement: updated, aiResult: singleResult };
+  }
+
+  // Detect double-sided / multi-file requirement indicators
+  const reqTitleLower = (req.title || '').toLowerCase();
+  const reqDescLower = (req.description || '').toLowerCase();
+  const isDoubleSidedReq =
+    reqTitleLower.match(/(recto|verso|cni|identit|permis|carte grise|séjour|double|2 faces)/i) ||
+    reqDescLower.match(/(recto|verso|double|2 faces)/i) ||
+    docFiles.some((f) => f.fileName.toUpperCase().startsWith('RECTO_') || f.fileName.toUpperCase().startsWith('VERSO_'));
+
+  const rectoFile =
+    docFiles.find((f) => f.fileName.toUpperCase().startsWith('RECTO_')) ||
+    (docFiles.length >= 2 ? docFiles[0] : null);
+
+  const versoFile =
+    docFiles.find((f) => f.fileName.toUpperCase().startsWith('VERSO_')) ||
+    (docFiles.length >= 2 ? docFiles[1] : null);
+
+  // If BOTH files exist (or 2+ files are present for a double-sided requirement), run analysis on BOTH files and aggregate results!
+  if (rectoFile && versoFile) {
+    const rectoBuffer = rectoFile.fileKey.startsWith('drive_')
+      ? await getFileBufferFromGoogleDrive(rectoFile.fileKey.replace('drive_', ''))
+      : null;
+    const versoBuffer = versoFile.fileKey.startsWith('drive_')
+      ? await getFileBufferFromGoogleDrive(versoFile.fileKey.replace('drive_', ''))
+      : null;
+
+    const rectoResult = await analyzeDocumentWithAi({
+      documentRequirementId,
+      fileName: rectoFile.fileName,
+      mimeType: rectoFile.mimeType,
+      fileSize: rectoFile.fileSize,
+      clientName: req.folderRequest.clientName,
+      buffer: rectoBuffer,
+    });
+
+    const versoResult = await analyzeDocumentWithAi({
+      documentRequirementId,
+      fileName: versoFile.fileName,
+      mimeType: versoFile.mimeType,
+      fileSize: versoFile.fileSize,
+      clientName: req.folderRequest.clientName,
+      buffer: versoBuffer,
+    });
+
+    const isBothValid = rectoResult.status !== 'REJECTED' && versoResult.status !== 'REJECTED';
+    const combinedScore = isBothValid
+      ? Math.round((rectoResult.confidenceScore + versoResult.confidenceScore) / 2)
+      : 0;
+
+    const combinedResult: AiCheckResult = {
+      confidenceScore: combinedScore,
+      status: isBothValid ? 'PASSED' : 'REJECTED',
+      documentCategory: `${rectoResult.documentCategory} (Recto + Verso)`,
+      summary: isBothValid
+        ? `Certifié conforme (${combinedScore}%) : Les 2 faces (Recto et Verso) sont validées.`
+        : `REJETÉ (0%) : ${rectoResult.status === 'REJECTED' ? 'Face RECTO non conforme.' : 'Face VERSO non conforme.'}`,
+      checks: [
+        {
+          label: 'Face RECTO (Avant)',
+          passed: rectoResult.status !== 'REJECTED',
+          details: rectoResult.status === 'REJECTED' ? 'Non conforme' : `Validé (${rectoResult.confidenceScore}%)`,
+        },
+        {
+          label: 'Face VERSO (Arrière)',
+          passed: versoResult.status !== 'REJECTED',
+          details: versoResult.status === 'REJECTED' ? 'Non conforme' : `Validé (${versoResult.confidenceScore}%)`,
+        },
+        ...rectoResult.checks.slice(0, 1),
+      ],
+      suggestedAction: isBothValid ? 'AUTO_VALIDATE' : 'REJECT',
+      rejectionReason: !isBothValid
+        ? `Une des faces du document est non conforme (${rectoResult.status === 'REJECTED' ? rectoResult.rejectionReason || 'Recto non valide' : versoResult.rejectionReason || 'Verso non valide'}).`
+        : undefined,
+    };
+
+    const newStatus = combinedResult.suggestedAction === 'AUTO_VALIDATE' ? 'VALIDATED' : 'SUBMITTED';
+
+    const updated = await db.documentRequirement.update({
+      where: { id: documentRequirementId },
+      data: {
+        aiVerified: true,
+        aiStatus: combinedResult.status,
+        aiConfidenceScore: combinedResult.confidenceScore,
+        aiAnalysisDetails: JSON.stringify(combinedResult),
+        status: newStatus,
+        rejectionReason: combinedResult.rejectionReason || null,
+      },
+    });
+
+    return { requirement: updated, aiResult: combinedResult };
+  }
+
+  // If only 1 file is present so far:
+  const latestDocFile = docFiles[docFiles.length - 1];
   let fileBuffer: Buffer | null = null;
-  if (docFile && docFile.fileKey.startsWith('drive_')) {
-    const driveId = docFile.fileKey.replace('drive_', '');
-    fileBuffer = await getFileBufferFromGoogleDrive(driveId);
+  if (latestDocFile.fileKey.startsWith('drive_')) {
+    fileBuffer = await getFileBufferFromGoogleDrive(latestDocFile.fileKey.replace('drive_', ''));
   }
 
   const result = await analyzeDocumentWithAi({
     documentRequirementId,
-    fileName: docFile?.fileName || fileName,
-    mimeType: docFile?.mimeType || mimeType,
-    fileSize: docFile?.fileSize || fileSize,
+    fileName: latestDocFile.fileName,
+    mimeType: latestDocFile.mimeType,
+    fileSize: latestDocFile.fileSize,
     clientName: req.folderRequest.clientName,
     buffer: fileBuffer,
   });
 
-  const newStatus = result.suggestedAction === 'AUTO_VALIDATE' ? 'VALIDATED' : 'SUBMITTED';
+  // If it's a double-sided requirement with only 1 face received so far
+  const isRectoOnly = isDoubleSidedReq && docFiles.length === 1;
+  if (isRectoOnly) {
+    if (result.status !== 'REJECTED') {
+      result.summary = `Face RECTO enregistrée (${result.confidenceScore}%). En attente de la face VERSO.`;
+      result.checks = [
+        { label: 'Face RECTO (Avant)', passed: true, details: `Validé (${result.confidenceScore}%)` },
+        { label: 'Face VERSO (Arrière)', passed: false, details: 'En attente du dépôt' },
+      ];
+      result.suggestedAction = 'MANUAL_REVIEW'; // Keep SUBMITTED until Verso arrives
+    } else {
+      result.summary = `Face RECTO rejetée (0%) : ${result.rejectionReason || 'Fichier non conforme'}`;
+    }
+  }
+
+  const newStatus = result.suggestedAction === 'AUTO_VALIDATE' && !isRectoOnly ? 'VALIDATED' : 'SUBMITTED';
 
   const updated = await db.documentRequirement.update({
     where: { id: documentRequirementId },

@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import {
   Mail,
   Lock,
+  Eye,
+  EyeOff,
   ArrowRight,
   ArrowLeft,
   Loader2,
@@ -16,13 +18,18 @@ import {
   Sparkles,
 } from 'lucide-react';
 import FylynxLogo from '@/components/FylynxLogo';
+import { useAuth } from '@/context/AuthContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function LoginPage() {
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { refreshUser } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +48,7 @@ export default function LoginPage() {
         throw new Error(data.error || 'Erreur de connexion');
       }
 
+      await refreshUser();
       router.push('/dashboard');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Erreur de connexion';
@@ -54,22 +62,19 @@ export default function LoginPage() {
     <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 bg-slate-950 text-slate-100 font-sans selection:bg-brand-500 selection:text-white">
       {/* Left Panel - High-Tech Showcase Panel */}
       <div className="hidden lg:flex flex-col justify-between p-12 bg-gradient-to-br from-slate-900 via-slate-950 to-brand-950 border-r border-slate-800/80 relative overflow-hidden">
-        {/* Glow Effects */}
         <div className="absolute top-1/3 left-10 w-96 h-96 bg-brand-500/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-10 right-10 w-80 h-80 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-        {/* Logo & Back to Home Header */}
         <div className="flex items-center justify-between relative z-10">
           <FylynxLogo size="lg" variant="dark" />
           <Link
             href="/"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white hover:border-slate-700 transition backdrop-blur-md"
           >
-            <ArrowLeft className="h-3.5 w-3.5 text-brand-400" /> Retour à l'accueil
+            <ArrowLeft className="h-3.5 w-3.5 text-brand-400" /> {t('nav_home')}
           </Link>
         </div>
 
-        {/* Showcase Body */}
         <div className="space-y-8 relative z-10 max-w-lg">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-brand-300 text-xs font-bold">
             <Sparkles className="h-4 w-4 text-amber-400" />
@@ -119,7 +124,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Testimonial Quote */}
         <div className="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/50 text-xs text-slate-400 leading-relaxed relative z-10">
           <p className="italic">
             "Fylynx nous permet de valider nos dossiers 4 fois plus vite sans aucune relance manuelle."
@@ -127,28 +131,27 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Panel - Form Container (Full Screen height) */}
-      <div className="flex flex-col justify-between p-6 sm:p-12 lg:p-16 min-h-screen bg-slate-950">
-        {/* Mobile Header Logo */}
-        <div className="flex items-center justify-between lg:hidden mb-8">
+      {/* Right Panel - Form Container */}
+      <div className="flex flex-col justify-between p-4 sm:p-8 lg:p-14 min-h-[calc(100vh-80px)] bg-slate-950">
+        <div className="flex items-center justify-between lg:hidden mb-6">
           <FylynxLogo size="md" variant="dark" />
           <Link
             href="/"
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs font-bold text-slate-300 hover:text-white transition"
           >
-            <ArrowLeft className="h-3.5 w-3.5 text-brand-400" /> Accueil
+            <ArrowLeft className="h-3.5 w-3.5 text-brand-400" /> {t('nav_home')}
           </Link>
         </div>
 
-        <div className="my-auto max-w-md w-full mx-auto space-y-8">
+        <div className="my-auto max-w-md w-full mx-auto space-y-6 sm:space-y-8">
           <div>
-            <h1 className="text-3xl font-black text-white tracking-tight">Connexion</h1>
-            <p className="text-sm text-slate-400 mt-2">
-              Accédez à votre espace de gestion et à vos dossiers clients
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{t('auth_login_title')}</h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1.5">
+              {t('auth_login_desc')}
             </p>
           </div>
 
-          <div className="bg-slate-900/80 border border-slate-800 p-8 rounded-3xl shadow-2xl backdrop-blur-xl">
+          <div className="bg-slate-900/80 border border-slate-800 p-5 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl">
             <form onSubmit={handleSubmit} className="space-y-5">
               {errorMsg && (
                 <div className="p-3.5 bg-rose-950/60 border border-rose-500/40 rounded-2xl text-rose-300 text-xs font-medium flex items-center gap-2">
@@ -159,7 +162,7 @@ export default function LoginPage() {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
-                  Adresse Email
+                  {t('auth_email_label')}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-3.5 h-4 w-4 text-slate-500" />
@@ -177,25 +180,33 @@ export default function LoginPage() {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
-                    Mot de Passe
+                    {t('auth_password_label')}
                   </label>
                   <Link
                     href="/forgot-password"
                     className="text-xs text-brand-400 hover:text-brand-300 font-semibold hover:underline"
                   >
-                    Mot de passe oublié ?
+                    {t('auth_forgot_pass')}
                   </Link>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-4 top-3.5 h-4 w-4 text-slate-500" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 text-sm bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+                    className="w-full pl-11 pr-11 py-3 text-sm bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-3.5 text-slate-500 hover:text-slate-200 transition focus:outline-none"
+                    title={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -206,11 +217,11 @@ export default function LoginPage() {
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Connexion en cours...
+                    <Loader2 className="h-4 w-4 animate-spin" /> Connexion...
                   </>
                 ) : (
                   <>
-                    Se Connecter <ArrowRight className="h-4 w-4" />
+                    {t('auth_login_btn')} <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </button>
@@ -218,16 +229,15 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-xs text-slate-400">
-            Pas encore de compte ?{' '}
+            {t('auth_no_account')}{' '}
             <Link href="/register" className="text-brand-400 font-bold hover:underline">
-              Créer un compte gratuit →
+              {t('auth_create_account')}
             </Link>
           </p>
         </div>
 
-        {/* Footer info */}
-        <div className="text-center text-[11px] text-slate-600">
-          © fylinx.com — Solution sécurisée de collecte documentaire B2B.
+        <div className="text-center text-[11px] text-slate-500 my-4">
+          © 2026 Fylynx — Solution sécurisée de collecte documentaire B2B.
         </div>
       </div>
     </div>

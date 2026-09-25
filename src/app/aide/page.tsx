@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
+import LandingFooter from '@/components/landing/LandingFooter';
 import {
   Camera,
   CheckCircle2,
@@ -50,7 +51,7 @@ export default function AidePage() {
         name: 'Faut-il installer une application ou créer un compte ?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Non. Vous n’avez besoin de télécharger aucune application ni de créer de compte. Cliquez simplement sur le lien 1-clic reçu par email ou SMS pour ouvrir directement l’appareil photo de votre smartphone.',
+          text: 'Non. Vous n’avez besoin de télécharger aucune application ni de créer de compte. Cliquez simplement sur le lien 1-clic reçu par email pour ouvrir directement l’appareil photo de votre smartphone.',
         },
       },
       {
@@ -189,7 +190,7 @@ export default function AidePage() {
                 <h3 className="font-extrabold text-white text-base">Dépôt 1-Clic & IA Instantanée</h3>
               </div>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Cliquez sur le lien unique reçu par e-mail ou SMS. Sélectionnez le fichier depuis votre galerie ou prenez la photo directement. Notre IA inspecte la conformité en moins de 2 secondes.
+                Cliquez sur le lien unique reçu par e-mail. Sélectionnez le fichier depuis votre galerie ou prenez la photo directement. Notre IA inspecte la conformité en moins de 2 secondes.
               </p>
               <div className="flex items-center gap-2 text-[11px] font-bold text-emerald-300 bg-emerald-500/10 p-2.5 rounded-2xl border border-emerald-500/20">
                 <FileCheck className="h-4 w-4 text-emerald-400 shrink-0" /> Formats autorisés : PDF, PNG, JPG, WEBP
@@ -219,7 +220,9 @@ export default function AidePage() {
               <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2 text-xs text-slate-300">
                 <div className="h-32 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 border border-emerald-500/30 flex items-center justify-center text-center p-4">
                   <div>
-                    <span className="text-emerald-400 font-bold block">✓ Document cadré à 100%</span>
+                    <span className="text-emerald-400 font-bold flex items-center justify-center gap-1.5">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" /> Document cadré à 100%
+                    </span>
                     <span className="text-[11px] text-slate-400 mt-1 block">Lumière uniforme • Textes nets • Bande MRZ visible</span>
                   </div>
                 </div>
@@ -250,7 +253,9 @@ export default function AidePage() {
               <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-2 text-xs text-slate-300">
                 <div className="h-32 rounded-xl bg-gradient-to-br from-slate-900 to-rose-950/40 border border-rose-500/30 flex items-center justify-center text-center p-4">
                   <div>
-                    <span className="text-rose-400 font-bold block">✕ Flash agressif / Flou de bougé</span>
+                    <span className="text-rose-400 font-bold flex items-center justify-center gap-1.5">
+                      <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" /> Flash agressif / Flou de bougé
+                    </span>
                     <span className="text-[11px] text-slate-400 mt-1 block">Coins coupés • Doigt sur le prénom • Document périmé</span>
                   </div>
                 </div>
@@ -308,6 +313,7 @@ export default function AidePage() {
           </Link>
         </div>
       </main>
+      <LandingFooter />
     </div>
   );
 }

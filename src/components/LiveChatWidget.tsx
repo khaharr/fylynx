@@ -3,7 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MessageSquare, X, Send, Sparkles, Bot, CheckCircle2, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { MessageSquare, X, Send, Sparkles, Bot, CheckCircle2, ArrowRight, ShieldCheck, Zap, CreditCard, Rocket } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -33,6 +34,8 @@ const FAQ_RESPONSES: Record<string, { answer: string; cta?: { label: string; hre
 };
 
 export default function LiveChatWidget() {
+  const pathname = usePathname();
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -45,6 +48,11 @@ export default function LiveChatWidget() {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Do not render live sales chat widget on client depositor links (/d/[token])
+  if (pathname?.startsWith('/d/')) {
+    return null;
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -226,21 +234,21 @@ export default function LiveChatWidget() {
           <div className="px-3 py-2 bg-slate-950 border-t border-slate-900 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
             <button
               onClick={() => handleSendMessage("Comment fonctionne l'IA de vérification ?")}
-              className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-[11px] font-semibold rounded-xl whitespace-nowrap transition"
+              className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-[11px] font-semibold rounded-xl whitespace-nowrap transition flex items-center gap-1"
             >
-              🤖 IA de vérification ?
+              <Bot className="h-3 w-3 text-indigo-400" /> IA de vérification ?
             </button>
             <button
               onClick={() => handleSendMessage("Puis-je tester 14 jours sans CB ?")}
-              className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-[11px] font-semibold rounded-xl whitespace-nowrap transition"
+              className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-[11px] font-semibold rounded-xl whitespace-nowrap transition flex items-center gap-1"
             >
-              🚀 Essai gratuit 14j ?
+              <Rocket className="h-3 w-3 text-amber-400" /> Essai gratuit 14j ?
             </button>
             <button
               onClick={() => handleSendMessage("Quels sont les tarifs et formules ?")}
-              className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-[11px] font-semibold rounded-xl whitespace-nowrap transition"
+              className="px-2.5 py-1 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-[11px] font-semibold rounded-xl whitespace-nowrap transition flex items-center gap-1"
             >
-              💳 Tarifs & formules ?
+              <CreditCard className="h-3 w-3 text-brand-400" /> Tarifs &amp; formules ?
             </button>
           </div>
 

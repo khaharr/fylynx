@@ -202,7 +202,7 @@ export default function TemplatesClientView({
                 : 'text-slate-400 hover:text-white hover:bg-slate-900'
             }`}
           >
-            <Mail className="h-4 w-4" /> ✉️ Éditeur de Modèles d&apos;E-mails & Relances
+            <Mail className="h-4 w-4" /> Éditeur de Modèles d&apos;E-mails &amp; Relances
           </button>
         </div>
 
@@ -548,6 +548,13 @@ export default function TemplatesClientView({
             </p>
           </div>
         </div>
+
+        <footer className="mt-12 pt-6 border-t border-slate-800/80 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3 font-medium px-2">
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="h-4 w-4 text-brand-400" /> Fylynx — Espace Professionnel Sécurisé
+          </span>
+          <span>© 2026 Tous droits réservés</span>
+        </footer>
       </main>
     </div>
   );

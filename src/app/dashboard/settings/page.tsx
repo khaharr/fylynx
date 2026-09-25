@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth';
+import { checkUserQuota } from '@/lib/quota';
 import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -13,6 +14,8 @@ export default async function SettingsPage() {
   if (!user) {
     redirect('/login');
   }
+
+  const quota = await checkUserQuota(user.id);
 
   return (
     <Suspense fallback={
@@ -30,6 +33,8 @@ export default async function SettingsPage() {
           companyLogo: user.companyLogo || null,
           customWelcomeMsg: user.customWelcomeMsg || null,
           brandColor: user.brandColor || '#4f46e5',
+          isTrialActive: quota.isTrialActive,
+          trialDaysLeft: quota.trialDaysLeft,
         }}
       />
     </Suspense>

@@ -322,6 +322,13 @@ export default function AdminClientView({
             </p>
           </div>
         </div>
+
+        <footer className="mt-12 pt-6 border-t border-slate-800/80 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3 font-medium px-2">
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="h-4 w-4 text-purple-400" /> Fylynx — HQ Administrateur Sécurisé
+          </span>
+          <span>© 2026 Tous droits réservés</span>
+        </footer>
       </main>
     </div>
   );

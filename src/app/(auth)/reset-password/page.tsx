@@ -3,7 +3,8 @@
 import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { FolderCheck, Lock, ArrowRight, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Lock, Eye, EyeOff, ArrowRight, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import FylynxLogo from '@/components/FylynxLogo';
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -12,6 +13,8 @@ function ResetPasswordForm() {
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -81,13 +84,21 @@ function ResetPasswordForm() {
             <div className="relative">
               <Lock className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full pl-10 pr-10 py-2.5 text-sm bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-200 transition focus:outline-none"
+                title={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
           </div>
 
@@ -98,13 +109,21 @@ function ResetPasswordForm() {
             <div className="relative">
               <Lock className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
               <input
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 required
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500"
+                className="w-full pl-10 pr-10 py-2.5 text-sm bg-slate-950 border border-slate-800 rounded-xl text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3.5 top-3 text-slate-500 hover:text-slate-200 transition focus:outline-none"
+                title={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
           </div>
 
@@ -131,27 +150,30 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-xl shadow-brand-500/30">
-              <FolderCheck className="h-7 w-7" />
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between">
+      <div className="flex-1 flex flex-col justify-center items-center p-4">
+        <div className="w-full max-w-md space-y-8">
+          <div className="text-center space-y-2">
+            <div className="flex justify-center">
+              <FylynxLogo size="lg" variant="dark" />
             </div>
-          </Link>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Nouveau Mot de Passe</h1>
-          <p className="text-sm text-slate-400">
-            Saisissez votre nouveau mot de passe sécurisé
-          </p>
-        </div>
-
-        <Suspense fallback={
-          <div className="text-center p-8">
-            <Loader2 className="h-8 w-8 animate-spin text-brand-400 mx-auto" />
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">Nouveau Mot de Passe</h1>
+            <p className="text-sm text-slate-400">
+              Saisissez votre nouveau mot de passe sécurisé
+            </p>
           </div>
-        }>
-          <ResetPasswordForm />
-        </Suspense>
+
+          <Suspense fallback={
+            <div className="text-center p-8">
+              <Loader2 className="h-8 w-8 animate-spin text-brand-400 mx-auto" />
+            </div>
+          }>
+            <ResetPasswordForm />
+          </Suspense>
+        </div>
+        <div className="text-center text-[11px] text-slate-500 my-4">
+          © 2026 Fylynx — Solution sécurisée de collecte documentaire B2B.
+        </div>
       </div>
     </div>
   );

@@ -225,7 +225,7 @@ export default function IntegrationsClientView({
                 className="px-6 py-4 bg-gradient-to-r from-cyan-400 via-teal-300 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-slate-950 font-black text-xs rounded-2xl shadow-xl transition flex items-center justify-center gap-2 shrink-0 transform hover:scale-105"
               >
                 <Zap className="h-4 w-4 fill-slate-950" />
-                Passer à Agence Scale (247 €/mois) →
+                Passer à Agence Scale (247 €/mois) <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -471,6 +471,13 @@ export default function IntegrationsClientView({
             </div>
           </div>
         )}
+
+        <footer className="mt-12 pt-6 border-t border-slate-800/80 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3 font-medium px-2">
+          <span className="flex items-center gap-1.5">
+            <ShieldCheck className="h-4 w-4 text-brand-400" /> Fylynx — Espace Professionnel Sécurisé
+          </span>
+          <span>© 2026 Tous droits réservés</span>
+        </footer>
       </main>
     </div>
   );

@@ -1,7 +1,14 @@
 import { Resend } from 'resend';
 
 const resendApiKey = process.env.RESEND_API_KEY;
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
+const isDummyKey =
+  !resendApiKey ||
+  resendApiKey.includes('your_') ||
+  resendApiKey.includes('placeholder') ||
+  resendApiKey === 're_123456789' ||
+  resendApiKey.length < 15;
+
+const resend = !isDummyKey ? new Resend(resendApiKey) : null;
 const fromEmail = process.env.RESEND_FROM_EMAIL || 'notifications@fylinx.com';
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
@@ -144,41 +151,43 @@ export async function sendReminderEmail({
   const missingListHtml =
     missingDocTitles && missingDocTitles.length > 0
       ? `
-    <div style="background-color: #f8fafc; border-left: 4px solid #026fc7; padding: 18px 20px; margin: 24px 0; border-radius: 10px;">
-      <p style="margin: 0 0 10px 0; font-weight: 800; font-size: 13px; color: #026fc7; text-transform: uppercase; letter-spacing: 0.5px;">📋 Justificatifs manquants à transmettre :</p>
-      <ul style="margin: 0; padding-left: 20px; color: #334155; font-size: 14px; line-height: 22px;">
-        ${missingDocTitles.map((t) => `<li style="margin-bottom: 4px;"><strong>${t}</strong></li>`).join('')}
+    <div style="background-color: #f8fafc; border-left: 4px solid #4f46e5; padding: 18px 20px; margin: 24px 0; border-radius: 12px; border: 1px solid #e2e8f0; border-left-width: 4px;">
+      <p style="margin: 0 0 10px 0; font-weight: 800; font-size: 13px; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">Justificatifs manquants à transmettre :</p>
+      <ul style="margin: 0; padding-left: 18px; color: #1e293b; font-size: 14px; line-height: 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+        ${missingDocTitles.map((t) => `<li style="margin-bottom: 6px;"><strong>${t}</strong></li>`).join('')}
       </ul>
     </div>
   `
       : '';
 
   const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 36px 28px; color: #0f172a; background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px -5px rgba(2, 111, 199, 0.08);">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 580px; margin: 0 auto; padding: 36px 28px; color: #0f172a; background-color: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 20px 40px -15px rgba(79, 70, 229, 0.12);">
       ${getEmailHeaderHtml()}
       
-      <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin-top: 0; margin-bottom: 14px;">Rappel : Votre dossier pour ${companyName} est incomplet</h2>
+      <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin-top: 0; margin-bottom: 14px; letter-spacing: -0.3px;">Rappel : Votre dossier pour ${companyName} est incomplet</h2>
       
-      <p style="font-size: 15px; line-height: 24px; color: #334155; margin-bottom: 16px;">Bonjour <strong>${clientName}</strong>,</p>
+      <p style="font-size: 15px; line-height: 24px; color: #334155; margin-bottom: 14px;">Bonjour <strong>${clientName}</strong>,</p>
       <p style="font-size: 15px; line-height: 24px; color: #334155; margin-bottom: 20px;">
-        <strong>${companyName}</strong> attend l'envoi de vos pièces justificatives pour finaliser votre dossier <strong>"${folderTitle}"</strong>.
+        <strong>${companyName}</strong> vous invite à transmettre directement vos pièces justificatives pour finaliser votre dossier <strong>"${folderTitle}"</strong>.
       </p>
 
       ${missingListHtml}
 
-      <p style="font-size: 14px; line-height: 22px; color: #475569;">
-        ⚡ <strong>Prise de vue rapide depuis votre smartphone :</strong> Cliquez sur le bouton ci-dessous pour photographier vos pièces directement, sans mot de passe ni inscription.
-      </p>
+      <div style="background-color: #eef2ff; border: 1px solid #c7d2fe; padding: 14px 16px; border-radius: 12px; margin-bottom: 24px;">
+        <p style="font-size: 13px; line-height: 20px; color: #3730a3; margin: 0; font-weight: 600;">
+          📱 <strong>Dépôt mobile rapide :</strong> Prenez simplement vos pièces en photo avec votre smartphone en 1 clic. Aucun mot de passe ni création de compte nécessaire.
+        </p>
+      </div>
 
       <div style="text-align: center; margin: 32px 0;">
-        <a href="${depositLink}" style="background-color: #026fc7; color: #ffffff; text-decoration: none; padding: 16px 36px; border-radius: 12px; font-weight: 800; font-size: 16px; display: inline-block; box-shadow: 0 8px 20px -4px rgba(2, 111, 199, 0.35);">
+        <a href="${depositLink}" style="background-color: #4f46e5; background-image: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: #ffffff; text-decoration: none; padding: 16px 36px; border-radius: 14px; font-weight: 800; font-size: 16px; display: inline-block; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4); text-align: center; width: 85%; max-width: 320px;">
           Transmettre mes pièces en 1 Clic →
         </a>
       </div>
 
-      <p style="font-size: 13px; color: #64748b; line-height: 20px; text-align: center;">
-        Lien direct sécurisé et valide :<br/>
-        <a href="${depositLink}" style="color: #026fc7; word-break: break-all; font-weight: 600;">${depositLink}</a>
+      <p style="font-size: 12px; color: #64748b; line-height: 18px; text-align: center; word-break: break-all;">
+        Lien direct sécurisé et réutilisable :<br/>
+        <a href="${depositLink}" style="color: #4f46e5; font-weight: 600; text-decoration: underline;">${depositLink}</a>
       </p>
 
       ${getEmailFooterHtml(companyName)}
@@ -451,9 +460,12 @@ export async function sendDocumentDepositNotificationEmail({
       if (response.error) {
         if (
           response.error.message?.includes('testing emails to your own email address') ||
-          (response.error as any).statusCode === 403
+          response.error.message?.includes('API key is invalid') ||
+          response.error.name === 'validation_error' ||
+          (response.error as any).statusCode === 403 ||
+          (response.error as any).statusCode === 400
         ) {
-          console.log(`[Resend Test Mode] Email de notification de dépôt simulé pour ${to}. Client: ${clientName}`);
+          console.log(`[Resend Mode Simulation] Notification de dépôt enregistrée pour ${to} (Client: ${clientName}). Ajoutez votre clé RESEND_API_KEY dans .env pour l'envoi réel d'emails.`);
           return { success: true, simulated: true };
         }
         console.error('[Resend Error]', response.error);

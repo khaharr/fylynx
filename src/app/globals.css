@@ -72,13 +72,43 @@ body {
 
 /* Glowing Effects */
 .glow-brand {
-  box-shadow: 0 0 30px -5px rgba(2, 132, 199, 0.4);
+  box-shadow: 0 0 35px -5px rgba(2, 132, 199, 0.45);
 }
 .glow-emerald {
-  box-shadow: 0 0 30px -5px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.45);
+}
+.glow-cyan {
+  box-shadow: 0 0 35px -5px rgba(34, 211, 238, 0.45);
+}
+.glow-indigo {
+  box-shadow: 0 0 35px -5px rgba(99, 102, 241, 0.45);
 }
 .glow-rose {
-  box-shadow: 0 0 30px -5px rgba(244, 63, 94, 0.4);
+  box-shadow: 0 0 35px -5px rgba(244, 63, 94, 0.45);
+}
+
+/* Keyframes */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-slow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 6s ease-in-out infinite;
 }
 
 /* Shimmering Text Effect */

@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import {
   Mail,
   Lock,
+  Eye,
+  EyeOff,
   User,
   Building2,
   ArrowRight,
@@ -19,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import FylynxLogo from '@/components/FylynxLogo';
+import { useAuth } from '@/context/AuthContext';
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -26,6 +29,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Captcha Checkbox & Honeypot States
   const [captchaChecked, setCaptchaChecked] = useState(false);
@@ -35,6 +40,7 @@ export default function RegisterPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { refreshUser } = useAuth();
 
   // Password matching validation
   const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
@@ -97,6 +103,7 @@ export default function RegisterPage() {
         throw new Error(data.error || 'Erreur lors de l\'inscription');
       }
 
+      await refreshUser();
       router.push('/dashboard');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Erreur lors de l'inscription";
@@ -160,7 +167,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Right Panel - Form Container */}
-      <div className="flex flex-col justify-between p-6 sm:p-12 lg:p-16 min-h-screen bg-slate-950">
+      <div className="flex flex-col justify-between p-4 sm:p-8 lg:p-14 min-h-[calc(100vh-80px)] bg-slate-950">
         {/* Mobile Header Logo */}
         <div className="flex items-center justify-between lg:hidden mb-6">
           <FylynxLogo size="md" variant="dark" />
@@ -174,13 +181,13 @@ export default function RegisterPage() {
 
         <div className="my-auto max-w-md w-full mx-auto space-y-6">
           <div>
-            <h1 className="text-3xl font-black text-white tracking-tight">Créer un Compte Sécurisé</h1>
-            <p className="text-sm text-slate-400 mt-2">
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Créer un Compte Sécurisé</h1>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1.5">
               Démarrer vos 14 jours d&apos;essai gratuit en quelques secondes
             </p>
           </div>
 
-          <div className="bg-slate-900/80 border border-slate-800 p-8 rounded-3xl shadow-2xl backdrop-blur-xl">
+          <div className="bg-slate-900/80 border border-slate-800 p-5 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Hidden Anti-Bot Honeypot Field */}
               <div className="absolute opacity-0 pointer-events-none -z-50 h-0 w-0 overflow-hidden">
@@ -260,13 +267,21 @@ export default function RegisterPage() {
                 <div className="relative">
                   <Lock className="absolute left-4 top-3.5 h-4 w-4 text-slate-500" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-11 pr-4 py-3 text-sm bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+                    className="w-full pl-11 pr-11 py-3 text-sm bg-slate-950 border border-slate-800 rounded-2xl text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-3.5 text-slate-500 hover:text-slate-200 transition focus:outline-none"
+                    title={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -290,12 +305,12 @@ export default function RegisterPage() {
                 <div className="relative">
                   <Lock className="absolute left-4 top-3.5 h-4 w-4 text-slate-500" />
                   <input
-                    type="password"
+                    type={showConfirmPassword ? 'text' : 'password'}
                     required
                     placeholder="Confirmez le mot de passe"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className={`w-full pl-11 pr-4 py-3 text-sm bg-slate-950 border rounded-2xl text-slate-100 placeholder-slate-600 focus:outline-none transition ${
+                    className={`w-full pl-11 pr-11 py-3 text-sm bg-slate-950 border rounded-2xl text-slate-100 placeholder-slate-600 focus:outline-none transition ${
                       passwordsMatch
                         ? 'border-emerald-500/80 ring-1 ring-emerald-500/50'
                         : passwordsMismatch
@@ -303,6 +318,14 @@ export default function RegisterPage() {
                         : 'border-slate-800 focus:ring-2 focus:ring-brand-500'
                     }`}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3.5 top-3.5 text-slate-500 hover:text-slate-200 transition focus:outline-none"
+                    title={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -362,15 +385,15 @@ export default function RegisterPage() {
 
           <p className="text-center text-xs text-slate-400">
             Vous avez déjà un compte ?{' '}
-            <Link href="/login" className="text-brand-400 font-bold hover:underline">
-              Se connecter →
+            <Link href="/login" className="inline-flex items-center gap-1 text-brand-400 font-bold hover:underline">
+              Se connecter <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </p>
         </div>
 
         {/* Footer info */}
-        <div className="text-center text-[11px] text-slate-600">
-          © fylinx.com — Inscription protégée par Captcha, rate limiting et chiffrée selon le RGPD.
+        <div className="text-center text-[11px] text-slate-500 my-4">
+          © 2026 Fylynx — Inscription protégée et chiffrée selon le RGPD.
         </div>
       </div>
     </div>
